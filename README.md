@@ -2,6 +2,32 @@
 
 Xterm.js is a front-end component written in TypeScript that lets applications bring fully-featured terminals to their users in the browser. It's used by popular projects such as VS Code, Hyper and Theia.
 
+## mjs fork
+
+Works with [index.html](./index.html).
+
+1. rename `src/{browser,common}/**/*.ts` to `*.mts`
+2. fix import to 'xxx.mjs'
+3. src/tsconfig-base.json
+
+```json
+-    "module": "commonjs",
++    "module": "nodenext",
+```
+
+4. webpack.config.js
+
+```json
+-    libraryTarget: 'umd'
++    libraryTarget: 'module'
+
++  experiments: {
++    outputModule: true,
++  }
+```
+
+5. `npm run package` => `lib/xterm.mjs`
+
 ## Features
 
 - **Terminal apps just work**: Xterm.js works with most terminal apps such as `bash`, `vim`, and `tmux`, including support for curses-based apps and mouse events.

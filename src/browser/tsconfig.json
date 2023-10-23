@@ -1,6 +1,9 @@
 {
   "extends": "../tsconfig-library-base",
   "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "lib": [
       "dom",
       "es2021"
@@ -11,7 +14,9 @@
     ],
     "baseUrl": "..",
     "paths": {
-      "common/*": [ "./common/*" ]
+      "common/*": [
+        "./common/*"
+      ]
     }
   },
   "include": [
@@ -19,6 +24,8 @@
     "../../typings/xterm.d.ts"
   ],
   "references": [
-    { "path": "../common" }
+    {
+      "path": "../common"
+    }
   ]
 }

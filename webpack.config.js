@@ -16,12 +16,12 @@ const path = require('path');
  * @type {import('webpack').Configuration}
  */
 const config = {
-  entry: './out/browser/public/Terminal.js',
+  entry: './out/browser/public/Terminal.mjs',
   devtool: 'source-map',
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.mjs$/,
         use: ["source-map-loader"],
         enforce: "pre",
         exclude: /node_modules/
@@ -30,17 +30,20 @@ const config = {
   },
   resolve: {
     modules: ['./node_modules'],
-    extensions: [ '.js' ],
+    extensions: ['.js'],
     alias: {
       common: path.resolve('./out/common'),
       browser: path.resolve('./out/browser')
     }
   },
   output: {
-    filename: 'xterm.js',
+    filename: 'xterm.mjs',
     path: path.resolve('./lib'),
-    libraryTarget: 'umd'
+    libraryTarget: 'module'
   },
-  mode: 'production'
+  mode: 'development',
+  experiments: {
+    outputModule: true,
+  }
 };
 module.exports = config;
