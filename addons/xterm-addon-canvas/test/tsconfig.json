@@ -21,9 +21,7 @@
     "strict": true,
     "types": [
       "../../../node_modules/@types/node",
-      "../../../node_modules/@lunapaint/png-codec",
-      "../../../out-test/playwright/TestUtils.mjs",
-      "../../../out-test/playwright/SharedRendererTests.mjs"
+      "../../../node_modules/@lunapaint/png-codec"
     ]
   },
   "include": [

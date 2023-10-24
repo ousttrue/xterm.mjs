@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <link rel="stylesheet" href="css/xterm.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@v0.157.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="terminal"></div>
-    <script type="module">
-      import { Terminal } from "./dist/xterm.mjs";
-      import { WebglAddon } from "./dist/xterm-addon-webgl.mjs";
-
-      const term = new Terminal();
-      term.open(document.getElementById("terminal"));
-      term.loadAddon(new WebglAddon());
-      term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
-    </script>
+    <script type="module" src="index.mjs"></script>
   </body>
 </html>
