@@ -18,6 +18,7 @@ const AddonMap = {
 
 const input = [
   path.join(ROOT, 'out', 'browser', 'public', 'Terminal.mjs'),
+  path.join(ROOT, 'addons', 'xterm-addon-webgl', 'out', 'WebGlExternalAddon.mjs'),
 ]
 for (const k in AddonMap) {
   input.push(
