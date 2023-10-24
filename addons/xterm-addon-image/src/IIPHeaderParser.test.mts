@@ -4,7 +4,7 @@
  */
 
 import { assert } from 'chai';
-import { HeaderParser, HeaderState, IHeaderFields } from './IIPHeaderParser';
+import { HeaderParser, HeaderState, IHeaderFields } from './IIPHeaderParser.mjs';
 
 
 const CASES: [string, IHeaderFields][] = [

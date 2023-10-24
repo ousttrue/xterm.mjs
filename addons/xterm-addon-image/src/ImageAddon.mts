@@ -3,12 +3,12 @@
  * @license MIT
  */
 
-import { IIPHandler } from './IIPHandler';
+import { IIPHandler } from './IIPHandler.mjs';
 import { ITerminalAddon, IDisposable } from 'xterm';
-import { ImageRenderer } from './ImageRenderer';
-import { ImageStorage, CELL_SIZE_DEFAULT } from './ImageStorage';
-import { SixelHandler } from './SixelHandler';
-import { ITerminalExt, IImageAddonOptions, IResetHandler } from './Types';
+import { ImageRenderer } from './ImageRenderer.mjs';
+import { ImageStorage, CELL_SIZE_DEFAULT } from './ImageStorage.mjs';
+import { SixelHandler } from './SixelHandler.mjs';
+import { ITerminalExt, IImageAddonOptions, IResetHandler } from './Types.mjs';
 
 
 // default values of addon ctor options

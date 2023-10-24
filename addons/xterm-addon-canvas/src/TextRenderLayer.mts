@@ -3,17 +3,17 @@
  * @license MIT
  */
 
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
-import { JoinedCellData } from 'browser/services/CharacterJoinerService';
-import { ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { CharData, ICellData } from 'common/Types';
-import { AttributeData } from 'common/buffer/AttributeData';
-import { CellData } from 'common/buffer/CellData';
-import { Content, NULL_CELL_CODE } from 'common/buffer/Constants';
-import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import { JoinedCellData } from 'browser/services/CharacterJoinerService.mjs';
+import { ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { CharData, ICellData } from 'common/Types.mjs';
+import { AttributeData } from 'common/buffer/AttributeData.mjs';
+import { CellData } from 'common/buffer/CellData.mjs';
+import { Content, NULL_CELL_CODE } from 'common/buffer/Constants.mjs';
+import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { BaseRenderLayer } from './BaseRenderLayer';
-import { GridCache } from './GridCache';
+import { BaseRenderLayer } from './BaseRenderLayer.mjs';
+import { GridCache } from './GridCache.mjs';
 
 /**
  * This CharData looks like a null character, which will forc a clear and render

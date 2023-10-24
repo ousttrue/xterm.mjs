@@ -2,12 +2,12 @@
  * Copyright (c) 2023 The xterm.js authors. All rights reserved.
  * @license MIT
  */
-import { IImageAddonOptions, IOscHandler, IResetHandler, ITerminalExt } from './Types';
-import { ImageRenderer } from './ImageRenderer';
-import { ImageStorage, CELL_SIZE_DEFAULT } from './ImageStorage';
-import Base64Decoder from 'xterm-wasm-parts/lib/base64/Base64Decoder.wasm';
-import { HeaderParser, IHeaderFields, HeaderState } from './IIPHeaderParser';
-import { imageType, UNSUPPORTED_TYPE } from './IIPMetrics';
+import { IImageAddonOptions, IOscHandler, IResetHandler, ITerminalExt } from './Types.mjs';
+import { ImageRenderer } from './ImageRenderer.mjs';
+import { ImageStorage, CELL_SIZE_DEFAULT } from './ImageStorage.mjs';
+import Base64Decoder from 'xterm-wasm-parts/lib/base64/Base64Decoder.wasm.js';
+import { HeaderParser, IHeaderFields, HeaderState } from './IIPHeaderParser.mjs';
+import { imageType, UNSUPPORTED_TYPE } from './IIPMetrics.mjs';
 
 
 // eslint-disable-next-line
@@ -31,7 +31,7 @@ export class IIPHandler implements IOscHandler, IResetHandler {
   private _aborted = false;
   private _hp = new HeaderParser();
   private _header: IHeaderFields = DEFAULT_HEADER;
-  private _dec = new Base64Decoder(KEEP_DATA);
+  private _dec = new Base64Decoder.default(KEEP_DATA);
   private _metrics = UNSUPPORTED_TYPE;
 
   constructor(

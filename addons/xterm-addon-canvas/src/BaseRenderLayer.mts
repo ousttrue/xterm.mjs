@@ -3,24 +3,24 @@
  * @license MIT
  */
 
-import { ReadonlyColorSet } from 'browser/Types';
-import { CellColorResolver } from 'browser/renderer/shared/CellColorResolver';
-import { acquireTextureAtlas } from 'browser/renderer/shared/CharAtlasCache';
-import { TEXT_BASELINE } from 'browser/renderer/shared/Constants';
-import { tryDrawCustomChar } from 'browser/renderer/shared/CustomGlyphs';
-import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils';
-import { createSelectionRenderModel } from 'browser/renderer/shared/SelectionRenderModel';
-import { IRasterizedGlyph, IRenderDimensions, ISelectionRenderModel, ITextureAtlas } from 'browser/renderer/shared/Types';
-import { ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { EventEmitter, forwardEvent } from 'common/EventEmitter';
-import { Disposable, MutableDisposable, toDisposable } from 'common/Lifecycle';
-import { isSafari } from 'common/Platform';
-import { ICellData } from 'common/Types';
-import { CellData } from 'common/buffer/CellData';
-import { WHITESPACE_CELL_CODE } from 'common/buffer/Constants';
-import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services';
+import { ReadonlyColorSet } from 'browser/Types.mjs';
+import { CellColorResolver } from 'browser/renderer/shared/CellColorResolver.mjs';
+import { acquireTextureAtlas } from 'browser/renderer/shared/CharAtlasCache.mjs';
+import { TEXT_BASELINE } from 'browser/renderer/shared/Constants.mjs';
+import { tryDrawCustomChar } from 'browser/renderer/shared/CustomGlyphs.mjs';
+import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils.mjs';
+import { createSelectionRenderModel } from 'browser/renderer/shared/SelectionRenderModel.mjs';
+import { IRasterizedGlyph, IRenderDimensions, ISelectionRenderModel, ITextureAtlas } from 'browser/renderer/shared/Types.mjs';
+import { ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { EventEmitter, forwardEvent } from 'common/EventEmitter.mjs';
+import { Disposable, MutableDisposable, toDisposable } from 'common/Lifecycle.mjs';
+import { isSafari } from 'common/Platform.mjs';
+import { ICellData } from 'common/Types.mjs';
+import { CellData } from 'common/buffer/CellData.mjs';
+import { WHITESPACE_CELL_CODE } from 'common/buffer/Constants.mjs';
+import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { IRenderLayer } from './Types';
+import { IRenderLayer } from './Types.mjs';
 
 export abstract class BaseRenderLayer extends Disposable implements IRenderLayer {
   private _canvas: HTMLCanvasElement;

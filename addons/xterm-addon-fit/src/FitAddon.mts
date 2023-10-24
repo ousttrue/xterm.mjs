@@ -4,7 +4,7 @@
  */
 
 import { Terminal, ITerminalAddon } from 'xterm';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
 
 interface ITerminalDimensions {
   /**

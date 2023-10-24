@@ -3,10 +3,10 @@
  * @license MIT
  */
 
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
-import { BaseRenderLayer } from './BaseRenderLayer';
-import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services';
-import { ICoreBrowserService, IThemeService } from 'browser/services/Services';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import { BaseRenderLayer } from './BaseRenderLayer.mjs';
+import { IBufferService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
+import { ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
 import { Terminal } from 'xterm';
 
 interface ISelectionState {

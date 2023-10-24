@@ -98,6 +98,8 @@
     "webpack": "^5.61.0",
     "webpack-cli": "^4.9.1",
     "ws": "^8.2.3",
-    "xterm-benchmark": "^0.3.1"
+    "xterm-benchmark": "^0.3.1",
+    "sixel": "^0.16.0",
+    "xterm-wasm-parts": "^0.1.0"
   }
 }

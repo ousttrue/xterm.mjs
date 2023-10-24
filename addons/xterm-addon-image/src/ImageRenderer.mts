@@ -3,10 +3,10 @@
  * @license MIT
  */
 
-import { toRGBA8888 } from 'sixel/lib/Colors';
+import { toRGBA8888 } from 'sixel/lib/Colors.js';
 import { IDisposable } from 'xterm';
-import { ICellSize, ITerminalExt, IImageSpec, IRenderDimensions, IRenderService } from './Types';
-import { Disposable, MutableDisposable, toDisposable } from 'common/Lifecycle';
+import { ICellSize, ITerminalExt, IImageSpec, IRenderDimensions, IRenderService } from './Types.mjs';
+import { Disposable, MutableDisposable, toDisposable } from 'common/Lifecycle.mjs';
 
 
 const PLACEHOLDER_LENGTH = 4096;

@@ -3,9 +3,9 @@
  * @license MIT
  */
 
-import { IDisposable } from 'common/Types';
-import { IEvent } from 'common/EventEmitter';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
+import { IDisposable } from 'common/Types.mjs';
+import { IEvent } from 'common/EventEmitter.mjs';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
 
 export interface IRequestRedrawEvent {
   start: number;

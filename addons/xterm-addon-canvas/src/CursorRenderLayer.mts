@@ -3,17 +3,17 @@
  * @license MIT
  */
 
-import { CursorBlinkStateManager } from 'browser/renderer/shared/CursorBlinkStateManager';
-import { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/shared/Types';
-import { ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { IEventEmitter } from 'common/EventEmitter';
-import { MutableDisposable } from 'common/Lifecycle';
-import { isFirefox } from 'common/Platform';
-import { ICellData } from 'common/Types';
-import { CellData } from 'common/buffer/CellData';
-import { IBufferService, ICoreService, IDecorationService, IOptionsService } from 'common/services/Services';
+import { CursorBlinkStateManager } from 'browser/renderer/shared/CursorBlinkStateManager.mjs';
+import { IRenderDimensions, IRequestRedrawEvent } from 'browser/renderer/shared/Types.mjs';
+import { ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { IEventEmitter } from 'common/EventEmitter.mjs';
+import { MutableDisposable } from 'common/Lifecycle.mjs';
+import { isFirefox } from 'common/Platform.mjs';
+import { ICellData } from 'common/Types.mjs';
+import { CellData } from 'common/buffer/CellData.mjs';
+import { IBufferService, ICoreService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { BaseRenderLayer } from './BaseRenderLayer';
+import { BaseRenderLayer } from './BaseRenderLayer.mjs';
 
 interface ICursorState {
   x: number;

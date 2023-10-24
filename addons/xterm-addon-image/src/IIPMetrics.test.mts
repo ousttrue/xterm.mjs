@@ -4,7 +4,7 @@
  */
 
 import { assert } from 'chai';
-import { imageType, IMetrics } from './IIPMetrics';
+import { imageType, IMetrics } from './IIPMetrics.mjs';
 
 // fix missing nodejs decl
 declare const require: (s: string) => any;

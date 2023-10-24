@@ -3,21 +3,21 @@
  * @license MIT
  */
 
-import { ILinkifier2 } from 'browser/Types';
-import { removeTerminalFromCache } from 'browser/renderer/shared/CharAtlasCache';
-import { observeDevicePixelDimensions } from 'browser/renderer/shared/DevicePixelObserver';
-import { createRenderDimensions } from 'browser/renderer/shared/RendererUtils';
-import { IRenderDimensions, IRenderer, IRequestRedrawEvent } from 'browser/renderer/shared/Types';
-import { ICharSizeService, ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { EventEmitter, forwardEvent } from 'common/EventEmitter';
-import { Disposable, toDisposable } from 'common/Lifecycle';
-import { IBufferService, ICoreService, IDecorationService, IOptionsService } from 'common/services/Services';
+import { ILinkifier2 } from 'browser/Types.mjs';
+import { removeTerminalFromCache } from 'browser/renderer/shared/CharAtlasCache.mjs';
+import { observeDevicePixelDimensions } from 'browser/renderer/shared/DevicePixelObserver.mjs';
+import { createRenderDimensions } from 'browser/renderer/shared/RendererUtils.mjs';
+import { IRenderDimensions, IRenderer, IRequestRedrawEvent } from 'browser/renderer/shared/Types.mjs';
+import { ICharSizeService, ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { EventEmitter, forwardEvent } from 'common/EventEmitter.mjs';
+import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
+import { IBufferService, ICoreService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { CursorRenderLayer } from './CursorRenderLayer';
-import { LinkRenderLayer } from './LinkRenderLayer';
-import { SelectionRenderLayer } from './SelectionRenderLayer';
-import { TextRenderLayer } from './TextRenderLayer';
-import { IRenderLayer } from './Types';
+import { CursorRenderLayer } from './CursorRenderLayer.mjs';
+import { LinkRenderLayer } from './LinkRenderLayer.mjs';
+import { SelectionRenderLayer } from './SelectionRenderLayer.mjs';
+import { TextRenderLayer } from './TextRenderLayer.mjs';
+import { IRenderLayer } from './Types.mjs';
 
 export class CanvasRenderer extends Disposable implements IRenderer {
   private _renderLayers: IRenderLayer[];

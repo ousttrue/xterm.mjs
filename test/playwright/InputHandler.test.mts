@@ -4,8 +4,8 @@
  */
 import { test } from '@playwright/test';
 import { deepStrictEqual, ok } from 'assert';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
-import { ITestContext, createTestContext, openTerminal, pollFor } from './TestUtils';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import { ITestContext, createTestContext, openTerminal, pollFor } from './TestUtils.mjs';
 
 let ctx: ITestContext;
 test.beforeAll(async ({ browser }) => {

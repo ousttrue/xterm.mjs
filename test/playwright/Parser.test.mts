@@ -5,7 +5,7 @@
 import { test } from '@playwright/test';
 import { deepStrictEqual, ok, strictEqual } from 'assert';
 import type { IDisposable } from 'xterm';
-import { createTestContext, ITestContext, openTerminal, pollFor } from './TestUtils';
+import { createTestContext, ITestContext, openTerminal, pollFor } from './TestUtils.mjs';
 
 let ctx: ITestContext;
 test.beforeAll(async ({ browser }) => {

@@ -4,9 +4,9 @@
  */
 
 import { assert } from 'chai';
-import { openTerminal, launchBrowser, pollFor } from '../../../out-test/api/TestUtils';
+import { openTerminal, launchBrowser, pollFor } from '../../../out-test/api/TestUtils.mjs';
 import { Browser, Page } from '@playwright/test';
-import { IImageAddonOptions } from '../src/Types';
+import { IImageAddonOptions } from '../src/Types.mjs';
 import { FINALIZER, introducer, sixelEncode } from 'sixel';
 import { readFileSync } from 'fs';
 

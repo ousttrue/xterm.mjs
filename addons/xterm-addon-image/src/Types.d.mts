@@ -6,13 +6,13 @@
 import { IDisposable, IMarker, Terminal } from 'xterm';
 
 // private imports from base repo we build against
-import { Attributes, BgFlags, Content, ExtFlags, UnderlineStyle } from 'common/buffer/Constants';
-import type { AttributeData } from 'common/buffer/AttributeData';
-import type { IParams, IDcsHandler, IOscHandler, IEscapeSequenceParser } from 'common/parser/Types';
-import type { IBufferLine, IExtendedAttrs, IInputHandler } from 'common/Types';
-import type { ITerminal, ReadonlyColorSet } from 'browser/Types';
-import type { IRenderDimensions } from 'browser/renderer/shared/Types';
-import type { ICoreBrowserService, IRenderService, IThemeService } from 'browser/services/Services';
+import { Attributes, BgFlags, Content, ExtFlags, UnderlineStyle } from 'common/buffer/Constants.mjs';
+import type { AttributeData } from 'common/buffer/AttributeData.mjs';
+import type { IParams, IDcsHandler, IOscHandler, IEscapeSequenceParser } from 'common/parser/Types.mjs';
+import type { IBufferLine, IExtendedAttrs, IInputHandler } from 'common/Types.mjs';
+import type { ITerminal, ReadonlyColorSet } from 'browser/Types.mjs';
+import type { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import type { ICoreBrowserService, IRenderService, IThemeService } from 'browser/services/Services.mjs';
 
 export const enum Cell {
   CONTENT = 0,  // codepoint and wcwidth information (enum Content)

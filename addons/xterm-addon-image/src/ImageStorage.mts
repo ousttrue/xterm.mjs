@@ -4,8 +4,8 @@
  */
 
 import { IDisposable } from 'xterm';
-import { ImageRenderer } from './ImageRenderer';
-import { ITerminalExt, IExtendedAttrsImage, IImageAddonOptions, IImageSpec, IBufferLineExt, BgFlags, Cell, Content, ICellSize, ExtFlags, Attributes, UnderlineStyle } from './Types';
+import { ImageRenderer } from './ImageRenderer.mjs';
+import { ITerminalExt, IExtendedAttrsImage, IImageAddonOptions, IImageSpec, IBufferLineExt, BgFlags, Cell, Content, ICellSize, ExtFlags, Attributes, UnderlineStyle } from './Types.mjs';
 
 
 // fallback default cell size

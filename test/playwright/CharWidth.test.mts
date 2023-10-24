@@ -4,7 +4,7 @@
  */
 
 import { test } from '@playwright/test';
-import { createTestContext, ITestContext, openTerminal, pollFor } from './TestUtils';
+import { createTestContext, ITestContext, openTerminal, pollFor } from './TestUtils.mjs';
 
 let ctx: ITestContext;
 test.beforeAll(async ({ browser }) => {

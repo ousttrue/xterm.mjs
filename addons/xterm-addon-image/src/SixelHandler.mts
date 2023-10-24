@@ -3,13 +3,13 @@
  * @license MIT
  */
 
-import { ImageStorage } from './ImageStorage';
-import { IDcsHandler, IParams, IImageAddonOptions, ITerminalExt, AttributeData, IResetHandler, ReadonlyColorSet } from './Types';
-import { toRGBA8888, BIG_ENDIAN, PALETTE_ANSI_256, PALETTE_VT340_COLOR } from 'sixel/lib/Colors';
-import { RGBA8888 } from 'sixel/lib/Types';
-import { ImageRenderer } from './ImageRenderer';
+import { ImageStorage } from './ImageStorage.mjs';
+import { IDcsHandler, IParams, IImageAddonOptions, ITerminalExt, AttributeData, IResetHandler, ReadonlyColorSet } from './Types.mjs';
+import { toRGBA8888, BIG_ENDIAN, PALETTE_ANSI_256, PALETTE_VT340_COLOR } from 'sixel/lib/Colors.js';
+import { RGBA8888 } from 'sixel/lib/Types.js';
+import { ImageRenderer } from './ImageRenderer.mjs';
 
-import { DecoderAsync, Decoder } from 'sixel/lib/Decoder';
+import { DecoderAsync, Decoder } from 'sixel/lib/Decoder.js';
 
 // always free decoder ressources after decoding if it exceeds this limit
 const MEM_PERMA_LIMIT = 4194304; // 1024 pixels * 1024 pixels * 4 channels = 4MB

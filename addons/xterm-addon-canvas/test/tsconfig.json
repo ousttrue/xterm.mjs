@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "es2015",
     "lib": [
       "es6",
@@ -22,8 +22,8 @@
     "types": [
       "../../../node_modules/@types/node",
       "../../../node_modules/@lunapaint/png-codec",
-      "../../../out-test/playwright/TestUtils",
-      "../../../out-test/playwright/SharedRendererTests"
+      "../../../out-test/playwright/TestUtils.mjs",
+      "../../../out-test/playwright/SharedRendererTests.mjs"
     ]
   },
   "include": [

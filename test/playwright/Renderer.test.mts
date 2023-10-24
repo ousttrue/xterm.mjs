@@ -4,8 +4,8 @@
  */
 
 import { test } from '@playwright/test';
-import { ITestContext, createTestContext, openTerminal } from './TestUtils';
-import { ISharedRendererTestContext, injectSharedRendererTestsStandalone, injectSharedRendererTests } from './SharedRendererTests';
+import { ITestContext, createTestContext, openTerminal } from './TestUtils.mjs';
+import { ISharedRendererTestContext, injectSharedRendererTestsStandalone, injectSharedRendererTests } from './SharedRendererTests.mjs';
 
 let ctx: ITestContext;
 const ctxWrapper: ISharedRendererTestContext = { value: undefined } as any;

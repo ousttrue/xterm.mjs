@@ -5,13 +5,13 @@
 
 import { Browser, JSHandle, Page } from '@playwright/test';
 import { deepStrictEqual, strictEqual } from 'assert';
-import type { IRenderDimensions } from 'browser/renderer/shared/Types';
-import type { IRenderService } from 'browser/services/Services';
-import type { ICoreTerminal, IMarker } from 'common/Types';
+import type { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import type { IRenderService } from 'browser/services/Services.mjs';
+import type { ICoreTerminal, IMarker } from 'common/Types.mjs';
 import * as playwright from '@playwright/test';
 import { PageFunction } from 'playwright-core/types/structs';
 import { IBuffer, IBufferCell, IBufferLine, IBufferNamespace, IBufferRange, IDecoration, IDecorationOptions, IModes, ITerminalInitOnlyOptions, ITerminalOptions, Terminal } from 'xterm';
-import { EventEmitter } from '../../out/common/EventEmitter';
+import { EventEmitter } from '../../out/common/EventEmitter.mjs';
 
 export interface ITestContext {
   browser: Browser;
