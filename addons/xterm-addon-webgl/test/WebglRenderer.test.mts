@@ -3,9 +3,9 @@
  * @license MIT
  */
 
-import test from '@playwright/test';
-import { ISharedRendererTestContext, injectSharedRendererTests, injectSharedRendererTestsStandalone } from '../../../out-test/playwright/SharedRendererTests';
-import { ITestContext, createTestContext, openTerminal } from '../../../out-test/playwright/TestUtils';
+import { test } from '@playwright/test';
+import { ISharedRendererTestContext, injectSharedRendererTests, injectSharedRendererTestsStandalone } from '../../../out-test/playwright/SharedRendererTests.mjs';
+import { ITestContext, createTestContext, openTerminal } from '../../../out-test/playwright/TestUtils.mjs';
 import { platform } from 'os';
 
 let ctx: ITestContext;

@@ -5,8 +5,8 @@
  * (EXPERIMENTAL) This Addon is still under development
  */
 
-import { DEFAULT_ANSI_COLORS } from 'browser/services/ThemeService';
-import { IAttributeData, IColor } from 'common/Types';
+import { DEFAULT_ANSI_COLORS } from 'browser/services/ThemeService.mjs';
+import { IAttributeData, IColor } from 'common/Types.mjs';
 import { IBuffer, IBufferCell, IBufferRange, ITerminalAddon, Terminal } from 'xterm';
 
 function constrain(value: number, low: number, high: number): number {

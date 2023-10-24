@@ -67,8 +67,9 @@
     "@types/express": "4",
     "@types/express-ws": "^3.0.1",
     "@types/glob": "^7.2.0",
+    "@types/jest": "^29.5.6",
     "@types/jsdom": "^16.2.13",
-    "@types/mocha": "^9.0.0",
+    "@types/mocha": "^9.1.1",
     "@types/node": "^18.16.0",
     "@types/utf8": "^3.0.0",
     "@types/webpack": "^5.28.0",
@@ -90,6 +91,7 @@
     "nyc": "^15.1.0",
     "rollup": "^4.1.4",
     "rollup-plugin-includepaths": "^0.2.4",
+    "sixel": "^0.16.0",
     "source-map-loader": "^3.0.0",
     "source-map-support": "^0.5.20",
     "ts-loader": "^9.3.1",
@@ -99,7 +101,6 @@
     "webpack-cli": "^4.9.1",
     "ws": "^8.2.3",
     "xterm-benchmark": "^0.3.1",
-    "sixel": "^0.16.0",
     "xterm-wasm-parts": "^0.1.0"
   }
 }

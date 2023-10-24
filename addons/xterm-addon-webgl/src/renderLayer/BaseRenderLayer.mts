@@ -3,17 +3,17 @@
  * @license MIT
  */
 
-import { ReadonlyColorSet } from 'browser/Types';
-import { acquireTextureAtlas } from 'browser/renderer/shared/CharAtlasCache';
-import { TEXT_BASELINE } from 'browser/renderer/shared/Constants';
-import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils';
-import { IRenderDimensions, ITextureAtlas } from 'browser/renderer/shared/Types';
-import { ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { Disposable, toDisposable } from 'common/Lifecycle';
-import { CellData } from 'common/buffer/CellData';
-import { IOptionsService } from 'common/services/Services';
+import { ReadonlyColorSet } from 'browser/Types.mjs';
+import { acquireTextureAtlas } from 'browser/renderer/shared/CharAtlasCache.mjs';
+import { TEXT_BASELINE } from 'browser/renderer/shared/Constants.mjs';
+import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils.mjs';
+import { IRenderDimensions, ITextureAtlas } from 'browser/renderer/shared/Types.mjs';
+import { ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
+import { CellData } from 'common/buffer/CellData.mjs';
+import { IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { IRenderLayer } from './Types';
+import { IRenderLayer } from './Types.mjs';
 
 export abstract class BaseRenderLayer extends Disposable implements IRenderLayer {
   private _canvas: HTMLCanvasElement;

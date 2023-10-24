@@ -6,7 +6,7 @@
  */
 
 import { Terminal, ITerminalAddon, IUnicodeHandling } from 'xterm';
-import { UnicodeGraphemeProvider } from './UnicodeGraphemeProvider';
+import { UnicodeGraphemeProvider } from './UnicodeGraphemeProvider.mjs';
 
 
 export class UnicodeGraphemesAddon implements ITerminalAddon {

@@ -4,7 +4,7 @@
  */
 
 import { assert } from 'chai';
-import { openTerminal, pollFor, writeSync, launchBrowser } from '../../../out-test/api/TestUtils';
+import { openTerminal, pollFor, writeSync, launchBrowser } from '../../../out-test/api/TestUtils.mjs';
 import { Browser, Page } from '@playwright/test';
 
 const APP = 'http://127.0.0.1:3001/test';

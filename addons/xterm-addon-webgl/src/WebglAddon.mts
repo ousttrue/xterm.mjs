@@ -3,15 +3,15 @@
  * @license MIT
  */
 
-import { ICharacterJoinerService, ICharSizeService, ICoreBrowserService, IRenderService, IThemeService } from 'browser/services/Services';
-import { ITerminal } from 'browser/Types';
-import { EventEmitter, forwardEvent } from 'common/EventEmitter';
-import { Disposable, toDisposable } from 'common/Lifecycle';
-import { getSafariVersion, isSafari } from 'common/Platform';
-import { ICoreService, IDecorationService, ILogService, IOptionsService } from 'common/services/Services';
+import { ICharacterJoinerService, ICharSizeService, ICoreBrowserService, IRenderService, IThemeService } from 'browser/services/Services.mjs';
+import { ITerminal } from 'browser/Types.mjs';
+import { EventEmitter, forwardEvent } from 'common/EventEmitter.mjs';
+import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
+import { getSafariVersion, isSafari } from 'common/Platform.mjs';
+import { ICoreService, IDecorationService, ILogService, IOptionsService } from 'common/services/Services.mjs';
 import { ITerminalAddon, Terminal } from 'xterm';
-import { WebglRenderer } from './WebglRenderer';
-import { setTraceLogger } from 'common/services/LogService';
+import { WebglRenderer } from './WebglRenderer.mjs';
+import { setTraceLogger } from 'common/services/LogService.mjs';
 
 export class WebglAddon extends Disposable implements ITerminalAddon {
   private _terminal?: Terminal;

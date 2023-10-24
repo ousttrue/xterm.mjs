@@ -3,8 +3,8 @@
  * @license MIT
  */
 
-import { ISelectionRenderModel } from 'browser/renderer/shared/Types';
-import { CursorInactiveStyle, CursorStyle } from 'common/Types';
+import { ISelectionRenderModel } from 'browser/renderer/shared/Types.mjs';
+import { CursorInactiveStyle, CursorStyle } from 'common/Types.mjs';
 
 export interface IRenderModel {
   cells: Uint32Array;

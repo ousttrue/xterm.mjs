@@ -3,7 +3,7 @@
  * @license MIT
  */
 import { assert } from 'chai';
-import { sliceFallback } from './TypedArray';
+import { sliceFallback } from './TypedArray.mjs';
 
 type TypedArray = Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Int8Array | Int16Array | Int32Array | Float32Array | Float64Array;
 

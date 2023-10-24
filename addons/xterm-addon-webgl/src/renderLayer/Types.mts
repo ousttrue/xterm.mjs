@@ -4,7 +4,7 @@
  */
 
 import { IDisposable, Terminal } from 'xterm';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
 
 export interface IRenderLayer extends IDisposable {
   /**

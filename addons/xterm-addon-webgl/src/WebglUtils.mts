@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils';
+import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils.mjs';
 
 /**
  * A matrix that when multiplies will translate 0-1 coordinates (left to right,

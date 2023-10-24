@@ -6,9 +6,9 @@
 import { perfContext, before, ThroughputRuntimeCase } from 'xterm-benchmark';
 
 import { spawn } from 'node-pty';
-import { Utf8ToUtf32, stringFromCodePoint } from 'common/input/TextDecoder';
-import { Terminal } from 'browser/Terminal';
-import { UnicodeGraphemeProvider } from 'UnicodeGraphemeProvider';
+import { Utf8ToUtf32, stringFromCodePoint } from 'common/input/TextDecoder.mjs';
+import { Terminal } from 'browser/Terminal.mjs';
+import { UnicodeGraphemeProvider } from '../src/UnicodeGraphemeProvider.mjs';
 
 
 function fakedAddonLoad(terminal: any): void {

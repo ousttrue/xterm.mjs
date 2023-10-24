@@ -6,7 +6,7 @@
  */
 
 import { Terminal, ITerminalAddon } from 'xterm';
-import { UnicodeV11 } from './UnicodeV11';
+import { UnicodeV11 } from './UnicodeV11.mjs';
 
 
 export class Unicode11Addon implements ITerminalAddon {

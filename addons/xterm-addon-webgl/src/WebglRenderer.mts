@@ -3,29 +3,29 @@
  * @license MIT
  */
 
-import { addDisposableDomListener } from 'browser/Lifecycle';
-import { ITerminal } from 'browser/Types';
-import { CellColorResolver } from 'browser/renderer/shared/CellColorResolver';
-import { acquireTextureAtlas, removeTerminalFromCache } from 'browser/renderer/shared/CharAtlasCache';
-import { CursorBlinkStateManager } from 'browser/renderer/shared/CursorBlinkStateManager';
-import { observeDevicePixelDimensions } from 'browser/renderer/shared/DevicePixelObserver';
-import { createRenderDimensions } from 'browser/renderer/shared/RendererUtils';
-import { IRenderDimensions, IRenderer, IRequestRedrawEvent, ITextureAtlas } from 'browser/renderer/shared/Types';
-import { ICharSizeService, ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { EventEmitter, forwardEvent } from 'common/EventEmitter';
-import { Disposable, MutableDisposable, getDisposeArrayDisposable, toDisposable } from 'common/Lifecycle';
-import { CharData, IBufferLine, ICellData } from 'common/Types';
-import { AttributeData } from 'common/buffer/AttributeData';
-import { CellData } from 'common/buffer/CellData';
-import { Attributes, Content, NULL_CELL_CHAR, NULL_CELL_CODE } from 'common/buffer/Constants';
-import { ICoreService, IDecorationService, IOptionsService } from 'common/services/Services';
+import { addDisposableDomListener } from 'browser/Lifecycle.mjs';
+import { ITerminal } from 'browser/Types.mjs';
+import { CellColorResolver } from 'browser/renderer/shared/CellColorResolver.mjs';
+import { acquireTextureAtlas, removeTerminalFromCache } from 'browser/renderer/shared/CharAtlasCache.mjs';
+import { CursorBlinkStateManager } from 'browser/renderer/shared/CursorBlinkStateManager.mjs';
+import { observeDevicePixelDimensions } from 'browser/renderer/shared/DevicePixelObserver.mjs';
+import { createRenderDimensions } from 'browser/renderer/shared/RendererUtils.mjs';
+import { IRenderDimensions, IRenderer, IRequestRedrawEvent, ITextureAtlas } from 'browser/renderer/shared/Types.mjs';
+import { ICharSizeService, ICharacterJoinerService, ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { EventEmitter, forwardEvent } from 'common/EventEmitter.mjs';
+import { Disposable, MutableDisposable, getDisposeArrayDisposable, toDisposable } from 'common/Lifecycle.mjs';
+import { CharData, IBufferLine, ICellData } from 'common/Types.mjs';
+import { AttributeData } from 'common/buffer/AttributeData.mjs';
+import { CellData } from 'common/buffer/CellData.mjs';
+import { Attributes, Content, NULL_CELL_CHAR, NULL_CELL_CODE } from 'common/buffer/Constants.mjs';
+import { ICoreService, IDecorationService, IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { GlyphRenderer } from './GlyphRenderer';
-import { RectangleRenderer } from './RectangleRenderer';
-import { COMBINED_CHAR_BIT_MASK, RENDER_MODEL_BG_OFFSET, RENDER_MODEL_EXT_OFFSET, RENDER_MODEL_FG_OFFSET, RENDER_MODEL_INDICIES_PER_CELL, RenderModel } from './RenderModel';
-import { IWebGL2RenderingContext } from './Types';
-import { LinkRenderLayer } from './renderLayer/LinkRenderLayer';
-import { IRenderLayer } from './renderLayer/Types';
+import { GlyphRenderer } from './GlyphRenderer.mjs';
+import { RectangleRenderer } from './RectangleRenderer.mjs';
+import { COMBINED_CHAR_BIT_MASK, RENDER_MODEL_BG_OFFSET, RENDER_MODEL_EXT_OFFSET, RENDER_MODEL_FG_OFFSET, RENDER_MODEL_INDICIES_PER_CELL, RenderModel } from './RenderModel.mjs';
+import { IWebGL2RenderingContext } from './Types.mjs';
+import { LinkRenderLayer } from './renderLayer/LinkRenderLayer.mjs';
+import { IRenderLayer } from './renderLayer/Types.mjs';
 
 export class WebglRenderer extends Disposable implements IRenderer {
   private _renderLayers: IRenderLayer[];

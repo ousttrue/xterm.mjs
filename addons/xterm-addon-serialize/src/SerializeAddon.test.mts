@@ -5,12 +5,12 @@
 
 import jsdom = require('jsdom');
 import { assert } from 'chai';
-import { SerializeAddon } from './SerializeAddon';
-import { Terminal } from 'browser/public/Terminal';
-import { SelectionModel } from 'browser/selection/SelectionModel';
-import { IBufferService } from 'common/services/Services';
-import { OptionsService } from 'common/services/OptionsService';
-import { ThemeService } from 'browser/services/ThemeService';
+import { SerializeAddon } from './SerializeAddon.mjs';
+import { Terminal } from 'browser/public/Terminal.mjs';
+import { SelectionModel } from 'browser/selection/SelectionModel.mjs';
+import { IBufferService } from 'common/services/Services.mjs';
+import { OptionsService } from 'common/services/OptionsService.mjs';
+import { ThemeService } from 'browser/services/ThemeService.mjs';
 
 function sgr(...seq: string[]): string {
   return `\x1b[${seq.join(';')}m`;

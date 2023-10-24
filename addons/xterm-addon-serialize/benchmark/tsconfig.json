@@ -6,7 +6,7 @@
     ],
     "outDir": "../out-benchmark",
     "types": ["../../../node_modules/@types/node"],
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "strict": false,
     "target": "es2021",
     "module": "nodenext",

@@ -6,9 +6,9 @@
 import { perfContext, before, ThroughputRuntimeCase } from 'xterm-benchmark';
 
 import { spawn } from 'node-pty';
-import { Utf8ToUtf32, stringFromCodePoint } from 'common/input/TextDecoder';
-import { Terminal } from 'browser/public/Terminal';
-import { SerializeAddon } from 'SerializeAddon';
+import { Utf8ToUtf32, stringFromCodePoint } from 'common/input/TextDecoder.mjs';
+import { Terminal } from 'browser/public/Terminal.mjs';
+import { SerializeAddon } from '../src/SerializeAddon.mjs';
 
 class TestTerminal extends Terminal {
   public writeSync(data: string): void {

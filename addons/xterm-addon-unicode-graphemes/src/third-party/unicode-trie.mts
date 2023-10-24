@@ -1,4 +1,4 @@
-import inflate from './tiny-inflate'
+import inflate from './tiny-inflate.mjs'
 
 // Shift size for getting the index-1 table offset.
 const SHIFT_1 = 6 + 5;

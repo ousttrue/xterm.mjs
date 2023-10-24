@@ -4,9 +4,9 @@
  */
 
 import { IUnicodeVersionProvider } from 'xterm';
-import { UnicodeCharProperties, UnicodeCharWidth } from 'common/services/Services';
-import { UnicodeService } from 'common/services/UnicodeService';
-import * as UC from './third-party/UnicodeProperties';
+import { UnicodeCharProperties, UnicodeCharWidth } from 'common/services/Services.mjs';
+import { UnicodeService } from 'common/services/UnicodeService.mjs';
+import * as UC from './third-party/UnicodeProperties.mjs';
 
 export class UnicodeGraphemeProvider implements IUnicodeVersionProvider {
   public readonly version;

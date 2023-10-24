@@ -4,7 +4,7 @@
  */
 
 import { Terminal, ITerminalAddon, IDisposable } from 'xterm';
-import { ILinkProviderOptions, WebLinkProvider } from './WebLinkProvider';
+import { ILinkProviderOptions, WebLinkProvider } from './WebLinkProvider.mjs';
 
 // consider everthing starting with http:// or https://
 // up to first whitespace, `"` or `'` as url

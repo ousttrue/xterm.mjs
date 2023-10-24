@@ -3,14 +3,14 @@
  * @license MIT
  */
 
-import { is256Color } from 'browser/renderer/shared/CharAtlasUtils';
-import { INVERTED_DEFAULT_COLOR } from 'browser/renderer/shared/Constants';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
-import { ICoreBrowserService, IThemeService } from 'browser/services/Services';
-import { ILinkifier2, ILinkifierEvent } from 'browser/Types';
-import { IOptionsService } from 'common/services/Services';
+import { is256Color } from 'browser/renderer/shared/CharAtlasUtils.mjs';
+import { INVERTED_DEFAULT_COLOR } from 'browser/renderer/shared/Constants.mjs';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import { ICoreBrowserService, IThemeService } from 'browser/services/Services.mjs';
+import { ILinkifier2, ILinkifierEvent } from 'browser/Types.mjs';
+import { IOptionsService } from 'common/services/Services.mjs';
 import { Terminal } from 'xterm';
-import { BaseRenderLayer } from './BaseRenderLayer';
+import { BaseRenderLayer } from './BaseRenderLayer.mjs';
 
 export class LinkRenderLayer extends BaseRenderLayer {
   private _state: ILinkifierEvent | undefined;

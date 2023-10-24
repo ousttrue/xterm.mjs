@@ -4,8 +4,8 @@
  */
 
 import { Terminal, IDisposable, ITerminalAddon, IDecoration } from 'xterm';
-import { EventEmitter } from 'common/EventEmitter';
-import { Disposable, toDisposable, disposeArray, MutableDisposable } from 'common/Lifecycle';
+import { EventEmitter } from 'common/EventEmitter.mjs';
+import { Disposable, toDisposable, disposeArray, MutableDisposable } from 'common/Lifecycle.mjs';
 
 export interface ISearchOptions {
   regex?: boolean;

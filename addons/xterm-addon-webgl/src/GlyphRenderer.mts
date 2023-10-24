@@ -3,14 +3,14 @@
  * @license MIT
  */
 
-import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils';
-import { TextureAtlas } from 'browser/renderer/shared/TextureAtlas';
-import { IRasterizedGlyph, IRenderDimensions, ITextureAtlas } from 'browser/renderer/shared/Types';
-import { NULL_CELL_CODE } from 'common/buffer/Constants';
-import { Disposable, toDisposable } from 'common/Lifecycle';
+import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils.mjs';
+import { TextureAtlas } from 'browser/renderer/shared/TextureAtlas.mjs';
+import { IRasterizedGlyph, IRenderDimensions, ITextureAtlas } from 'browser/renderer/shared/Types.mjs';
+import { NULL_CELL_CODE } from 'common/buffer/Constants.mjs';
+import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
 import { Terminal } from 'xterm';
-import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types';
-import { createProgram, GLTexture, PROJECTION_MATRIX } from './WebglUtils';
+import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types.mjs';
+import { createProgram, GLTexture, PROJECTION_MATRIX } from './WebglUtils.mjs';
 
 interface IVertices {
   attributes: Float32Array;

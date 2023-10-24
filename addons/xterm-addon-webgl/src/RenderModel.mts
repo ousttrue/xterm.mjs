@@ -3,9 +3,9 @@
  * @license MIT
  */
 
-import { ICursorRenderModel, IRenderModel } from './Types';
-import { ISelectionRenderModel } from 'browser/renderer/shared/Types';
-import { createSelectionRenderModel } from 'browser/renderer/shared/SelectionRenderModel';
+import { ICursorRenderModel, IRenderModel } from './Types.mjs';
+import { ISelectionRenderModel } from 'browser/renderer/shared/Types.mjs';
+import { createSelectionRenderModel } from 'browser/renderer/shared/SelectionRenderModel.mjs';
 
 export const RENDER_MODEL_INDICIES_PER_CELL = 4;
 export const RENDER_MODEL_BG_OFFSET = 1;

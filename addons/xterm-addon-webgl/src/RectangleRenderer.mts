@@ -3,17 +3,17 @@
  * @license MIT
  */
 
-import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils';
-import { IRenderDimensions } from 'browser/renderer/shared/Types';
-import { IThemeService } from 'browser/services/Services';
-import { ReadonlyColorSet } from 'browser/Types';
-import { Attributes, FgFlags } from 'common/buffer/Constants';
-import { Disposable, toDisposable } from 'common/Lifecycle';
-import { IColor } from 'common/Types';
+import { throwIfFalsy } from 'browser/renderer/shared/RendererUtils.mjs';
+import { IRenderDimensions } from 'browser/renderer/shared/Types.mjs';
+import { IThemeService } from 'browser/services/Services.mjs';
+import { ReadonlyColorSet } from 'browser/Types.mjs';
+import { Attributes, FgFlags } from 'common/buffer/Constants.mjs';
+import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
+import { IColor } from 'common/Types.mjs';
 import { Terminal } from 'xterm';
-import { RENDER_MODEL_BG_OFFSET, RENDER_MODEL_FG_OFFSET, RENDER_MODEL_INDICIES_PER_CELL } from './RenderModel';
-import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types';
-import { createProgram, expandFloat32Array, PROJECTION_MATRIX } from './WebglUtils';
+import { RENDER_MODEL_BG_OFFSET, RENDER_MODEL_FG_OFFSET, RENDER_MODEL_INDICIES_PER_CELL } from './RenderModel.mjs';
+import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types.mjs';
+import { createProgram, expandFloat32Array, PROJECTION_MATRIX } from './WebglUtils.mjs';
 
 const enum VertexAttribLocations {
   POSITION = 0,
