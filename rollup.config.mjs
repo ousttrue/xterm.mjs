@@ -1,34 +1,49 @@
 import path from 'path'
-const ROOT = process.cwd()
 import includePaths from 'rollup-plugin-includepaths';
+
+const ROOT = process.cwd()
+
+const AddonMap = {
+  'AttachAddon.mjs': 'xterm-addon-attach',
+  'CanvasAddon.mjs': 'xterm-addon-canvas',
+  'FitAddon.mjs': 'xterm-addon-fit',
+  'ImageAddon.mjs': 'xterm-addon-image',
+  'SearchAddon.mjs': 'xterm-addon-search',
+  'SerializeAddon.mjs': 'xterm-addon-serialize',
+  'UnicodeGraphemesAddon.mjs': 'xterm-addon-unicode-graphemes',
+  'Unicode11Addon.mjs': 'xterm-addon-unicode11',
+  'WebLinksAddon.mjs': 'xterm-addon-web-links',
+  'WebGlAddon.mjs': 'xterm-addon-webgl',
+}
+
+const input = [
+  path.join(ROOT, 'out', 'browser', 'public', 'Terminal.mjs'),
+]
+for (const k in AddonMap) {
+  input.push(
+    path.join(ROOT, 'addons', AddonMap[k], 'out', k));
+}
+
 export default [
   {
-    input: [
-      path.join(ROOT, 'out', 'browser', 'public', 'Terminal.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-attach', 'out', 'AttachAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-canvas', 'out', 'CanvasAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-fit', 'out', 'FitAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-image', 'out', 'ImageAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-search', 'out', 'SearchAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-serialize', 'out', 'SerializeAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-unicode-graphemes', 'out', 'UnicodeGraphemesAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-unicode11', 'out', 'Unicode11Addon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-web-links', 'out', 'WebLinksAddon.mjs'),
-      path.join(ROOT, 'addons', 'xterm-addon-webgl', 'out', 'WebGlAddon.mjs'),
-    ],
+    input: input,
     output: [
       {
         dir: `dist`,
         format: 'esm',
         sourcemap: true,
         entryFileNames: chunk => {
-
           if (chunk.facadeModuleId.endsWith("Terminal.mjs")) {
             return "xterm.mjs"
           }
-          else {
-            return "[name].mjs"
+
+          const name = path.basename(chunk.facadeModuleId);
+          const addon = AddonMap[name]
+          if (addon) {
+            return `${addon}.mjs`
           }
+
+          return '[name].mjs'
         }
       },
     ],
