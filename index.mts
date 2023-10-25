@@ -1,9 +1,9 @@
 import * as THREE from "https://unpkg.com/three@v0.157.0/build/three.module.js";
 // import { Terminal } from "./dist/xterm.mjs";
 import { Terminal } from "./src/browser/public/Terminal.mts";
-import { Terminal as Headless } from "./dist/xterm-headless.mjs";
-import { WebglExternalAddon } from "./dist/WebglExternalAddon.mjs";
-import { WebglAddon } from "./dist/xterm-addon-webgl.mjs";
+import { Terminal as Headless } from "./src/headless/Terminal.mts";
+import { WebglExternalAddon } from "./addons/xterm-addon-webgl/src/WebglExternalAddon.mts";
+import { WebglAddon } from "./addons/xterm-addon-webgl/src/WebglAddon.mts";
 
 document.addEventListener("DOMContentLoaded", (event) => {
   console.log("DOM fully loaded and parsed");
