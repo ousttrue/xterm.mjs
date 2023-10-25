@@ -1,5 +1,6 @@
-import * as THREE from "three";
-import { Terminal } from "./dist/xterm.mjs";
+import * as THREE from "https://unpkg.com/three@v0.157.0/build/three.module.js";
+// import { Terminal } from "./dist/xterm.mjs";
+import { Terminal } from "./src/browser/public/Terminal.mts";
 import { Terminal as Headless } from "./dist/xterm-headless.mjs";
 import { WebglExternalAddon } from "./dist/WebglExternalAddon.mjs";
 import { WebglAddon } from "./dist/xterm-addon-webgl.mjs";
