@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Terminal } from "./dist/xterm.mjs";
+import { Terminal as Headless } from "./dist/xterm-headless.mjs";
 import { WebglExternalAddon } from "./dist/WebglExternalAddon.mjs";
 import { WebglAddon } from "./dist/xterm-addon-webgl.mjs";
 
@@ -85,7 +86,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
   // TODO: render to exists context
 
   const term = new Terminal();
-  term.open(document.getElementById("terminal"));
+  // const term = new Headless();
+  if (term.open) {
+    term.open(document.getElementById("terminal"));
+  }
   const addon = new WebglExternalAddon(canvas, gl);
   // const addon = new WebglAddon();
   term.loadAddon(addon);

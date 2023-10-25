@@ -18,6 +18,7 @@ const AddonMap = {
 
 const input = [
   path.join(ROOT, 'out', 'browser', 'public', 'Terminal.mjs'),
+  path.join(ROOT, 'out', 'headless', 'public', 'Terminal.mjs'),
   path.join(ROOT, 'addons', 'xterm-addon-webgl', 'out', 'WebGlExternalAddon.mjs'),
 ]
 for (const k in AddonMap) {
@@ -35,7 +36,12 @@ export default [
         sourcemap: true,
         entryFileNames: chunk => {
           if (chunk.facadeModuleId.endsWith("Terminal.mjs")) {
-            return "xterm.mjs"
+            if (chunk.facadeModuleId.includes('headless')) {
+              return "xterm-headless.mjs"
+            }
+            else {
+              return "xterm.mjs"
+            }
           }
 
           const name = path.basename(chunk.facadeModuleId);
