@@ -60,7 +60,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   private _invalidate: { start: number, end: number }[] = [];
 
   constructor(
-    private _canvas: HTMLCanvasElement,
     private _gl: IWebGL2RenderingContext,
     private _core: ITerminal,
     private _buffer: BufferNamespaceApi,
@@ -86,33 +85,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     this._updateCursorBlink();
     this.register(_optionsService.onOptionChange(() => this._handleOptionsChanged()));
 
-    this.register(addDisposableDomListener(this._canvas, 'webglcontextlost', (e) => {
-      console.log('webglcontextlost event received');
-      // Prevent the default behavior in order to enable WebGL context restoration.
-      e.preventDefault();
-      // Wait a few seconds to see if the 'webglcontextrestored' event is fired.
-      // If not, dispatch the onContextLoss notification to observers.
-      this._contextRestorationTimeout = setTimeout(() => {
-        this._contextRestorationTimeout = undefined;
-        console.warn('webgl context not restored; firing onContextLoss');
-        this._onContextLoss.fire(e);
-      }, 3000 /* ms */);
-    }));
-    this.register(addDisposableDomListener(this._canvas, 'webglcontextrestored', (e) => {
-      console.warn('webglcontextrestored event received');
-      clearTimeout(this._contextRestorationTimeout);
-      this._contextRestorationTimeout = undefined;
-      // The texture atlas and glyph renderer must be fully reinitialized
-      // because their contents have been lost.
-      removeTerminalFromCache(this._core);
-      this._initializeWebGLState();
-      this._requestRedrawViewport();
-    }));
-
-    this.register(observeDevicePixelDimensions(this._canvas, this._coreBrowserService.window, (w, h) => this._setCanvasDevicePixelDimensions(w, h)));
-
-    this._core.screenElement!.appendChild(this._canvas);
-
     [this._rectangleRenderer.value, this._glyphRenderer.value] = this._initializeWebGLState();
 
     this._isAttached = this._coreBrowserService.window.document.body.contains(this._core.screenElement!);
@@ -121,7 +93,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
       for (const l of this._renderLayers) {
         l.dispose();
       }
-      this._canvas.parentElement?.removeChild(this._canvas);
       removeTerminalFromCache(this._core);
     }));
   }
@@ -156,12 +127,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     for (const l of this._renderLayers) {
       l.resize(this._core, this.dimensions);
     }
-
-    // Resize the canvas
-    this._canvas.width = this.dimensions.device.canvas.width;
-    this._canvas.height = this.dimensions.device.canvas.height;
-    this._canvas.style.width = `${this.dimensions.css.canvas.width}px`;
-    this._canvas.style.height = `${this.dimensions.css.canvas.height}px`;
 
     // Resize the screen
     this._core.screenElement!.style.width = `${this.dimensions.css.canvas.width}px`;
@@ -566,17 +531,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     // size on the canvas can differ.
     this.dimensions.css.cell.height = this.dimensions.device.cell.height / this._devicePixelRatio;
     this.dimensions.css.cell.width = this.dimensions.device.cell.width / this._devicePixelRatio;
-  }
-
-  private _setCanvasDevicePixelDimensions(width: number, height: number): void {
-    if (this._canvas.width === width && this._canvas.height === height) {
-      return;
-    }
-    // While the actual canvas size has changed, keep device canvas dimensions as the value before
-    // the change as it's an exact multiple of the cell sizes.
-    this._canvas.width = width;
-    this._canvas.height = height;
-    this._requestRedrawViewport();
   }
 
   private _requestRedrawViewport(): void {

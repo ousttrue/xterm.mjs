@@ -99,11 +99,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
   }
 
   const buffer = new BufferNamespaceApi(term);
-  const addon = new WebglExternalAddon(canvas, gl);
+  const addon = new WebglExternalAddon(gl);
   // const addon = new WebglAddon();
   // const addonManager = new AddonManager();
   // addonManager.loadAddon(term, addon);
-  addon.activateCore(term, buffer, canvas, gl);
+  addon.activateCore(term, buffer, gl);
   term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
 
   // class State {

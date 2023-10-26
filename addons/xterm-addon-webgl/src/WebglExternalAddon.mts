@@ -18,7 +18,6 @@ import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi.mjs';
 export class WebglExternalAddon extends Disposable implements ITerminalAddon {
   private _terminal?: Terminal;
   _renderer?: WebglExternalRenderer;
-  private readonly _canvas: HTMLCanvasElement;
   private readonly _gl: IWebGL2RenderingContext;
 
   private readonly _onChangeTextureAtlas = this.register(new EventEmitter<HTMLCanvasElement>());
@@ -31,14 +30,12 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
   public readonly onContextLoss = this._onContextLoss.event;
 
   constructor(
-    canvas: HTMLCanvasElement,
     gl: IWebGL2RenderingContext
   ) {
     if (isSafari && getSafariVersion() < 16) {
       throw new Error('Webgl2 is only supported on Safari 16 and above');
     }
     super();
-    this._canvas = canvas;
     this._gl = gl;
   }
 
@@ -49,7 +46,7 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
       return;
     }
     this._terminal = terminal;
-    this.activateCore(core, this._canvas, this._gl);
+    this.activateCore(core, terminal.buffer, this._gl);
     this.register(toDisposable(() => {
       const renderService: IRenderService = (this._terminal as any)._core._renderService;
       renderService.setRenderer((this._terminal as any)._core._createRenderer());
@@ -57,7 +54,10 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     }));
   }
 
-  public activateCore(core: ITerminal, buffer: BufferNamespaceApi, canvas: HTMLCanvasElement, gl: IWebGL2RenderingContext): void {
+  public activateCore(core: ITerminal, buffer: BufferNamespaceApi, gl: IWebGL2RenderingContext): void {
+    // workaround
+    core._core = core;
+
     const coreService: ICoreService = core.coreService;
     const optionsService: IOptionsService = core.optionsService;
     const unsafeCore = core as any;
@@ -74,7 +74,7 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     setTraceLogger(logService);
 
     this._renderer = this.register(new WebglExternalRenderer(
-      canvas, gl, core, buffer,
+      gl, core, buffer,
       characterJoinerService,
       charSizeService,
       coreBrowserService,
