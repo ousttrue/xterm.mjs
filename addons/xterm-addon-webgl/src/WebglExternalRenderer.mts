@@ -26,6 +26,7 @@ import { COMBINED_CHAR_BIT_MASK, RENDER_MODEL_BG_OFFSET, RENDER_MODEL_EXT_OFFSET
 import { IWebGL2RenderingContext } from './Types.mjs';
 import { LinkRenderLayer } from './renderLayer/LinkRenderLayer.mjs';
 import { IRenderLayer } from './renderLayer/Types.mjs';
+import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi.mjs';
 
 export class WebglExternalRenderer extends Disposable implements IRenderer {
   private _renderLayers: IRenderLayer[];
@@ -38,14 +39,11 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   private _workCell: CellData = new CellData();
   private _cellColorResolver: CellColorResolver;
 
-  private _canvas: HTMLCanvasElement;
-  private _gl: IWebGL2RenderingContext;
   private _rectangleRenderer: MutableDisposable<RectangleRenderer> = this.register(new MutableDisposable());
   private _glyphRenderer: MutableDisposable<GlyphRenderer> = this.register(new MutableDisposable());
 
   public readonly dimensions: IRenderDimensions;
 
-  private _core: ITerminal;
   private _isAttached: boolean;
   private _contextRestorationTimeout: number | undefined;
 
@@ -59,12 +57,13 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   public readonly onRequestRedraw = this._onRequestRedraw.event;
   private readonly _onContextLoss = this.register(new EventEmitter<void>());
   public readonly onContextLoss = this._onContextLoss.event;
-  private _invalidate: {start:number,end:number}[] = [];
+  private _invalidate: { start: number, end: number }[] = [];
 
   constructor(
-    private canvas: HTMLCanvasElement,
-    private gl: IWebGL2RenderingContext,
-    private _terminal: Terminal,
+    private _canvas: HTMLCanvasElement,
+    private _gl: IWebGL2RenderingContext,
+    private _core: ITerminal,
+    private _buffer: BufferNamespaceApi,
     private readonly _characterJoinerService: ICharacterJoinerService,
     private readonly _charSizeService: ICharSizeService,
     private readonly _coreBrowserService: ICoreBrowserService,
@@ -77,21 +76,15 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
     this.register(this._themeService.onChangeColors(() => this._handleColorChange()));
 
-    this._cellColorResolver = new CellColorResolver(this._terminal, this._model.selection, this._decorationService, this._coreBrowserService, this._themeService);
-
-    this._core = (this._terminal as any)._core;
-
+    this._cellColorResolver = new CellColorResolver(this._core, this._model.selection, this._decorationService, this._coreBrowserService, this._themeService);
     this._renderLayers = [
-      new LinkRenderLayer(this._core.screenElement!, 2, this._terminal, this._core.linkifier2, this._coreBrowserService, _optionsService, this._themeService)
+      new LinkRenderLayer(this._core.screenElement!, 2, this._core, this._core.linkifier2, this._coreBrowserService, _optionsService, this._themeService)
     ];
     this.dimensions = createRenderDimensions();
     this._devicePixelRatio = this._coreBrowserService.dpr;
     this._updateDimensions();
     this._updateCursorBlink();
     this.register(_optionsService.onOptionChange(() => this._handleOptionsChanged()));
-
-    this._canvas = canvas;
-    this._gl = gl;
 
     this.register(addDisposableDomListener(this._canvas, 'webglcontextlost', (e) => {
       console.log('webglcontextlost event received');
@@ -111,7 +104,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
       this._contextRestorationTimeout = undefined;
       // The texture atlas and glyph renderer must be fully reinitialized
       // because their contents have been lost.
-      removeTerminalFromCache(this._terminal);
+      removeTerminalFromCache(this._core);
       this._initializeWebGLState();
       this._requestRedrawViewport();
     }));
@@ -129,7 +122,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
         l.dispose();
       }
       this._canvas.parentElement?.removeChild(this._canvas);
-      removeTerminalFromCache(this._terminal);
+      removeTerminalFromCache(this._core);
     }));
   }
 
@@ -149,7 +142,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     // and the terminal needs to refreshed
     if (this._devicePixelRatio !== this._coreBrowserService.dpr) {
       this._devicePixelRatio = this._coreBrowserService.dpr;
-      this.handleResize(this._terminal.cols, this._terminal.rows);
+      this.handleResize(this._core.cols, this._core.rows);
     }
   }
 
@@ -157,11 +150,11 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     // Update character and canvas dimensions
     this._updateDimensions();
 
-    this._model.resize(this._terminal.cols, this._terminal.rows);
+    this._model.resize(this._core.cols, this._core.rows);
 
     // Resize all render layers
     for (const l of this._renderLayers) {
-      l.resize(this._terminal, this.dimensions);
+      l.resize(this._core, this.dimensions);
     }
 
     // Resize the canvas
@@ -187,12 +180,12 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   }
 
   public handleCharSizeChanged(): void {
-    this.handleResize(this._terminal.cols, this._terminal.rows);
+    this.handleResize(this._core.cols, this._core.rows);
   }
 
   public handleBlur(): void {
     for (const l of this._renderLayers) {
-      l.handleBlur(this._terminal);
+      l.handleBlur(this._core);
     }
     this._cursorBlinkStateManager.value?.pause();
     // Request a redraw for active/inactive selection background
@@ -201,7 +194,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public handleFocus(): void {
     for (const l of this._renderLayers) {
-      l.handleFocus(this._terminal);
+      l.handleFocus(this._core);
     }
     this._cursorBlinkStateManager.value?.resume();
     // Request a redraw for active/inactive selection background
@@ -210,15 +203,15 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public handleSelectionChanged(start: [number, number] | undefined, end: [number, number] | undefined, columnSelectMode: boolean): void {
     for (const l of this._renderLayers) {
-      l.handleSelectionChanged(this._terminal, start, end, columnSelectMode);
+      l.handleSelectionChanged(this._core, start, end, columnSelectMode);
     }
-    this._model.selection.update(this._terminal, start, end, columnSelectMode);
+    this._model.selection.update(this._core, start, end, columnSelectMode);
     this._requestRedrawViewport();
   }
 
   public handleCursorMove(): void {
     for (const l of this._renderLayers) {
-      l.handleCursorMove(this._terminal);
+      l.handleCursorMove(this._core);
     }
     this._cursorBlinkStateManager.value?.restartBlinkAnimation();
   }
@@ -233,8 +226,8 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
    * Initializes members dependent on WebGL context state.
    */
   private _initializeWebGLState(): [RectangleRenderer, GlyphRenderer] {
-    this._rectangleRenderer.value = new RectangleRenderer(this._terminal, this._gl, this.dimensions, this._themeService);
-    this._glyphRenderer.value = new GlyphRenderer(this._terminal, this._gl, this.dimensions);
+    this._rectangleRenderer.value = new RectangleRenderer(this._core, this._gl, this.dimensions, this._themeService);
+    this._glyphRenderer.value = new GlyphRenderer(this._core, this._gl, this.dimensions);
 
     // Update dimensions and acquire char atlas
     this.handleCharSizeChanged();
@@ -253,7 +246,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     }
 
     const atlas = acquireTextureAtlas(
-      this._terminal,
+      this._core,
       this._optionsService.rawOptions,
       this._themeService.colors,
       this.dimensions.device.cell.width,
@@ -295,7 +288,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   public clear(): void {
     this._clearModel(true);
     for (const l of this._renderLayers) {
-      l.reset(this._terminal);
+      l.reset(this._core);
     }
 
     this._cursorBlinkStateManager.value?.restartBlinkAnimation();
@@ -312,11 +305,11 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public renderRows(start: number, end: number): void {
     console.log(`${start} => ${end}`);
-    this._invalidate.push({start, end});
+    this._invalidate.push({ start, end });
   }
 
   public render(): void {
-    for(const {start, end} of this._invalidate){
+    for (const { start, end } of this._invalidate) {
       if (!this._isAttached) {
         if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
           this._updateDimensions();
@@ -326,27 +319,27 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
           return;
         }
       }
-  
+
       // Update render layers
       for (const l of this._renderLayers) {
-        l.handleGridChanged(this._terminal, start, end);
+        l.handleGridChanged(this._core, start, end);
       }
-  
+
       if (!this._glyphRenderer.value || !this._rectangleRenderer.value) {
         return;
       }
-  
+
       // Tell renderer the frame is beginning
       // upon a model clear also refresh the full viewport model
       // (also triggered by an atlas page merge, part of #4480)
       if (this._glyphRenderer.value.beginFrame()) {
         this._clearModel(true);
-        this._updateModel(0, this._terminal.rows - 1);
+        this._updateModel(0, this._core.rows - 1);
       } else {
         // just update changed lines to draw
         this._updateModel(start, end);
       }
-  
+
       // Render
       this._rectangleRenderer.value.renderBackgrounds();
       this._glyphRenderer.value.render(this._model);
@@ -354,11 +347,11 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
         this._rectangleRenderer.value.renderCursor();
       }
     }
-    this._invalidate.length=0;
+    this._invalidate.length = 0;
   }
 
   private _updateCursorBlink(): void {
-    if (this._terminal.options.cursorBlink) {
+    if (this._core.options.cursorBlink) {
       this._cursorBlinkStateManager.value = new CursorBlinkStateManager(() => {
         this._requestRedrawCursor();
       }, this._coreBrowserService);
@@ -391,9 +384,9 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     start = clamp(start, terminal.rows - 1, 0);
     end = clamp(end, terminal.rows - 1, 0);
 
-    const cursorY = this._terminal.buffer.active.baseY + this._terminal.buffer.active.cursorY;
+    const cursorY = this._buffer.active.baseY + this._buffer.active.cursorY;
     // in case cursor.x == cols adjust visual cursor to cols - 1
-    const cursorX = Math.min(this._terminal.buffer.active.cursorX, terminal.cols - 1);
+    const cursorX = Math.min(this._buffer.active.cursorX, terminal.cols - 1);
     let lastCursorX = -1;
     const isCursorVisible =
       this._coreService.isCursorInitialized &&
@@ -450,7 +443,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
           if (x === cursorX) {
             this._model.cursor = {
               x: cursorX,
-              y: this._terminal.buffer.active.cursorY,
+              y: this._buffer.active.cursorY,
               width: cell.getWidth(),
               style: this._coreBrowserService.isFocused ?
                 (terminal.options.cursorStyle || 'block') : terminal.options.cursorInactiveStyle,
@@ -556,8 +549,8 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
     // Recalculate the canvas dimensions, the device dimensions define the actual number of pixel in
     // the canvas
-    this.dimensions.device.canvas.height = this._terminal.rows * this.dimensions.device.cell.height;
-    this.dimensions.device.canvas.width = this._terminal.cols * this.dimensions.device.cell.width;
+    this.dimensions.device.canvas.height = this._core.rows * this.dimensions.device.cell.height;
+    this.dimensions.device.canvas.width = this._core.cols * this.dimensions.device.cell.width;
 
     // The the size of the canvas on the page. It's important that this rounds to nearest integer
     // and not ceils as browsers often have floating point precision issues where
@@ -587,11 +580,11 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   }
 
   private _requestRedrawViewport(): void {
-    this._onRequestRedraw.fire({ start: 0, end: this._terminal.rows - 1 });
+    this._onRequestRedraw.fire({ start: 0, end: this._core.rows - 1 });
   }
 
   private _requestRedrawCursor(): void {
-    const cursorY = this._terminal.buffer.active.cursorY;
+    const cursorY = this._buffer.active.cursorY;
     this._onRequestRedraw.fire({ start: cursorY, end: cursorY });
   }
 }

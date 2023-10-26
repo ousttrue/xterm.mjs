@@ -1,9 +1,12 @@
 import * as THREE from "https://unpkg.com/three@v0.157.0/build/three.module.js";
 // import { Terminal } from "./dist/xterm.mjs";
 import { Terminal } from "./src/browser/public/Terminal.mts";
+import { Terminal as TerminalCore } from "./src/browser/Terminal.mts";
 import { Terminal as Headless } from "./src/headless/Terminal.mts";
 import { WebglExternalAddon } from "./addons/xterm-addon-webgl/src/WebglExternalAddon.mts";
 import { WebglAddon } from "./addons/xterm-addon-webgl/src/WebglAddon.mts";
+import { AddonManager } from './src/common/public/AddonManager.mts';
+import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 
 document.addEventListener("DOMContentLoaded", (event) => {
   console.log("DOM fully loaded and parsed");
@@ -86,14 +89,21 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   // TODO: render to exists context
 
-  const term = new Terminal();
+  const term = new TerminalCore();
   // const term = new Headless();
   if (term.open) {
-    term.open(document.getElementById("terminal"));
+    const el = document.getElementById("terminal");
+    if (el) {
+      term.open(el);
+    }
   }
+
+  const buffer = new BufferNamespaceApi(term);
   const addon = new WebglExternalAddon(canvas, gl);
   // const addon = new WebglAddon();
-  term.loadAddon(addon);
+  // const addonManager = new AddonManager();
+  // addonManager.loadAddon(term, addon);
+  addon.activateCore(term, buffer, canvas, gl);
   term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
 
   // class State {

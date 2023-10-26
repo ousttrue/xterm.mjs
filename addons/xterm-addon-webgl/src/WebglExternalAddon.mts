@@ -13,6 +13,7 @@ import { ITerminalAddon, Terminal } from 'xterm';
 import { WebglExternalRenderer } from './WebglExternalRenderer.mjs';
 import { setTraceLogger } from 'common/services/LogService.mjs';
 import { IWebGL2RenderingContext } from './Types.mjs';
+import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi.mjs';
 
 export class WebglExternalAddon extends Disposable implements ITerminalAddon {
   private _terminal?: Terminal;
@@ -47,11 +48,18 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
       this.register(core.onWillOpen(() => this.activate(terminal)));
       return;
     }
-
     this._terminal = terminal;
+    this.activateCore(core, this._canvas, this._gl);
+    this.register(toDisposable(() => {
+      const renderService: IRenderService = (this._terminal as any)._core._renderService;
+      renderService.setRenderer((this._terminal as any)._core._createRenderer());
+      renderService.handleResize(terminal.cols, terminal.rows);
+    }));
+  }
+
+  public activateCore(core: ITerminal, buffer: BufferNamespaceApi, canvas: HTMLCanvasElement, gl: IWebGL2RenderingContext): void {
     const coreService: ICoreService = core.coreService;
     const optionsService: IOptionsService = core.optionsService;
-
     const unsafeCore = core as any;
     const renderService: IRenderService = unsafeCore._renderService;
     const characterJoinerService: ICharacterJoinerService = unsafeCore._characterJoinerService;
@@ -66,8 +74,7 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     setTraceLogger(logService);
 
     this._renderer = this.register(new WebglExternalRenderer(
-      this._canvas, this._gl,
-      terminal,
+      canvas, gl, core, buffer,
       characterJoinerService,
       charSizeService,
       coreBrowserService,
@@ -81,12 +88,6 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     this.register(forwardEvent(this._renderer.onAddTextureAtlasCanvas, this._onAddTextureAtlasCanvas));
     this.register(forwardEvent(this._renderer.onRemoveTextureAtlasCanvas, this._onRemoveTextureAtlasCanvas));
     renderService.setRenderer(this._renderer);
-
-    this.register(toDisposable(() => {
-      const renderService: IRenderService = (this._terminal as any)._core._renderService;
-      renderService.setRenderer((this._terminal as any)._core._createRenderer());
-      renderService.handleResize(terminal.cols, terminal.rows);
-    }));
   }
 
   public get textureAtlas(): HTMLCanvasElement | undefined {
