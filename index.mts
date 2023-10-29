@@ -8,24 +8,29 @@ import State from './state.mts'
 document.addEventListener("DOMContentLoaded", (event) => {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
+  var w = canvas.clientWidth;
+  var h = canvas.clientHeight;
+  console.log(w, h);
+  canvas.setAttribute('width', `${w}`);
+  canvas.setAttribute('height', `${h}`);
   const gl = canvas.getContext('webgl2', {
   });
   console.log(gl);
   console.log(canvas);
 
-  const inner = new SceneTarget();
-  const outer = new RectTarget();
-  outer.Load(inner.Target?.texture);
-
-  const state = new State(canvas, gl,
-    (dx, dy) => {
-      outer.Rect.x += dx;
-      outer.Rect.y += dy;
-    },
-    (dx, dy) => {
-      outer.Rect.width += dx;
-      outer.Rect.height += dy;
-    });
+  // const inner = new SceneTarget();
+  // const outer = new RectTarget();
+  // outer.Load(inner.Target?.texture);
+  //
+  // const state = new State(canvas, gl,
+  //   (dx, dy) => {
+  //     outer.Rect.x += dx;
+  //     outer.Rect.y += dy;
+  //   },
+  //   (dx, dy) => {
+  //     outer.Rect.width += dx;
+  //     outer.Rect.height += dy;
+  //   });
 
   const term = new TerminalCore();
   if (term.open) {
@@ -43,17 +48,20 @@ document.addEventListener("DOMContentLoaded", (event) => {
   function animate() {
     requestAnimationFrame(animate);
 
-    inner.Update(outer.Rect.width, outer.Rect.height);
-    outer.Update(state.CursorScreen);
+    // const w = outer.Rect.width;
+    // const h = outer.Rect.height;
+    // inner.Update(w, h);
+    // outer.Update(state.CursorScreen);
 
     // render to fbo
-    state._renderer.setRenderTarget(inner.Target);
+    // state._renderer.setRenderTarget(inner.Target);
     // state._renderer.render(inner.Scene, inner.Camera);
-    addon._renderer.render(inner.Target.width, inner.Target.height);
+    addon._renderer.render();
 
     // render to canvas
-    state._renderer.setRenderTarget(outer.Target);
-    state._renderer.render(outer.Scene, outer.Camera);
+    // state._renderer.resetState();
+    // state._renderer.setRenderTarget(outer.Target);
+    // state._renderer.render(outer.Scene, outer.Camera);
   }
   animate();
 });

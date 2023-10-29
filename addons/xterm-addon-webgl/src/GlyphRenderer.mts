@@ -11,6 +11,7 @@ import { Disposable, toDisposable } from 'common/Lifecycle.mjs';
 import { Terminal } from 'xterm';
 import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types.mjs';
 import { createProgram, GLTexture, PROJECTION_MATRIX } from './WebglUtils.mjs';
+import VaoObject from './VaoObject.mjs';
 
 interface IVertices {
   attributes: Float32Array;
@@ -90,7 +91,6 @@ let $clippedPixels = 0;
 
 export class GlyphRenderer extends Disposable {
   private readonly _program: WebGLProgram;
-  private readonly _vertexArrayObject: IWebGLVertexArrayObject;
   private readonly _projectionLocation: WebGLUniformLocation;
   private readonly _resolutionLocation: WebGLUniformLocation;
   private readonly _textureLocation: WebGLUniformLocation;
@@ -107,6 +107,7 @@ export class GlyphRenderer extends Disposable {
       new Float32Array(0)
     ]
   };
+  private _vao: VaoObject;
 
   constructor(
     private readonly _terminal: Terminal,
@@ -133,8 +134,9 @@ export class GlyphRenderer extends Disposable {
     this._textureLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_texture'));
 
     // Create and set the vertex array object
-    this._vertexArrayObject = gl.createVertexArray();
-    gl.bindVertexArray(this._vertexArrayObject);
+    this._vao = new VaoObject(gl);
+    this.register(toDisposable(() => this._vao.dispose()));
+    this._vao.bind();
 
     // Setup a_unitquad, this defines the 4 vertices of a rectangle
     const unitQuadVertices = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
@@ -176,6 +178,8 @@ export class GlyphRenderer extends Disposable {
     gl.enableVertexAttribArray(VertexAttribLocations.CELL_POSITION);
     gl.vertexAttribPointer(VertexAttribLocations.CELL_POSITION, 2, gl.FLOAT, false, BYTES_PER_CELL, 9 * Float32Array.BYTES_PER_ELEMENT);
     gl.vertexAttribDivisor(VertexAttribLocations.CELL_POSITION, 1);
+
+    this._vao.unbind();
 
     // Setup static uniforms
     gl.useProgram(this._program);
@@ -245,7 +249,7 @@ export class GlyphRenderer extends Disposable {
     if (bg !== lastBg && $glyph.offset.x > $leftCellPadding) {
       $clippedPixels = $glyph.offset.x - $leftCellPadding;
       // a_origin
-      array[$i    ] = -($glyph.offset.x - $clippedPixels) + this._dimensions.device.char.left;
+      array[$i] = -($glyph.offset.x - $clippedPixels) + this._dimensions.device.char.left;
       array[$i + 1] = -$glyph.offset.y + this._dimensions.device.char.top;
       // a_size
       array[$i + 2] = ($glyph.size.x - $clippedPixels) / this._dimensions.device.canvas.width;
@@ -260,7 +264,7 @@ export class GlyphRenderer extends Disposable {
       array[$i + 8] = $glyph.sizeClipSpace.y;
     } else {
       // a_origin
-      array[$i    ] = -$glyph.offset.x + this._dimensions.device.char.left;
+      array[$i] = -$glyph.offset.x + this._dimensions.device.char.left;
       array[$i + 1] = -$glyph.offset.y + this._dimensions.device.char.top;
       // a_size
       array[$i + 2] = $glyph.size.x / this._dimensions.device.canvas.width;
@@ -322,7 +326,6 @@ export class GlyphRenderer extends Disposable {
     const gl = this._gl;
 
     gl.useProgram(this._program);
-    gl.bindVertexArray(this._vertexArrayObject);
 
     // Alternate buffers each frame as the active buffer gets locked while it's in use by the GPU
     this._activeBuffer = (this._activeBuffer + 1) % 2;
@@ -355,7 +358,7 @@ export class GlyphRenderer extends Disposable {
     }
 
     // Draw the viewport
-    gl.drawElementsInstanced(gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_BYTE, 0, bufferLength / INDICES_PER_CELL);
+    this._vao.draw(bufferLength / INDICES_PER_CELL);
   }
 
   public setAtlas(atlas: ITextureAtlas): void {

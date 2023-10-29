@@ -14,6 +14,7 @@ import { Terminal } from 'xterm';
 import { RENDER_MODEL_BG_OFFSET, RENDER_MODEL_FG_OFFSET, RENDER_MODEL_INDICIES_PER_CELL } from './RenderModel.mjs';
 import { IRenderModel, IWebGL2RenderingContext, IWebGLVertexArrayObject } from './Types.mjs';
 import { createProgram, expandFloat32Array, PROJECTION_MATRIX } from './WebglUtils.mjs';
+import VaoObject from './VaoObject.mjs'
 
 const enum VertexAttribLocations {
   POSITION = 0,
@@ -76,7 +77,6 @@ let $a = 0;
 export class RectangleRenderer extends Disposable {
 
   private _program: WebGLProgram;
-  private _vertexArrayObject: IWebGLVertexArrayObject;
   private _attributesBuffer: WebGLBuffer;
   private _projectionLocation: WebGLUniformLocation;
   private _bgFloat!: Float32Array;
@@ -84,6 +84,7 @@ export class RectangleRenderer extends Disposable {
 
   private _vertices: Vertices = new Vertices();
   private _verticesCursor: Vertices = new Vertices();
+  private _vao: VaoObject;
 
   constructor(
     private _terminal: Terminal,
@@ -102,8 +103,10 @@ export class RectangleRenderer extends Disposable {
     this._projectionLocation = throwIfFalsy(gl.getUniformLocation(this._program, 'u_projection'));
 
     // Create and set the vertex array object
-    this._vertexArrayObject = gl.createVertexArray();
-    gl.bindVertexArray(this._vertexArrayObject);
+    this._vao = new VaoObject(gl);
+    this.register(toDisposable(() => this._vao.dispose()));
+
+    this._vao.bind();
 
     // Setup a_unitquad, this defines the 4 vertices of a rectangle
     const unitQuadVertices = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
@@ -156,15 +159,13 @@ export class RectangleRenderer extends Disposable {
     const gl = this._gl;
 
     gl.useProgram(this._program);
-
-    gl.bindVertexArray(this._vertexArrayObject);
-
     gl.uniformMatrix4fv(this._projectionLocation, false, PROJECTION_MATRIX);
 
     // Bind attributes buffer and draw
     gl.bindBuffer(gl.ARRAY_BUFFER, this._attributesBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices.attributes, gl.DYNAMIC_DRAW);
-    gl.drawElementsInstanced(this._gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_BYTE, 0, vertices.count);
+
+    this._vao.draw(vertices.count);
   }
 
   public handleResize(): void {
@@ -343,14 +344,14 @@ export class RectangleRenderer extends Disposable {
     $y1 = y * this._dimensions.device.cell.height;
     $r = (($rgba >> 24) & 0xFF) / 255;
     $g = (($rgba >> 16) & 0xFF) / 255;
-    $b = (($rgba >> 8 ) & 0xFF) / 255;
+    $b = (($rgba >> 8) & 0xFF) / 255;
     $a = 1;
 
     this._addRectangle(vertices.attributes, offset, $x1, $y1, (endX - startX) * this._dimensions.device.cell.width, this._dimensions.device.cell.height, $r, $g, $b, $a);
   }
 
   private _addRectangle(array: Float32Array, offset: number, x1: number, y1: number, width: number, height: number, r: number, g: number, b: number, a: number): void {
-    array[offset    ] = x1 / this._dimensions.device.canvas.width;
+    array[offset] = x1 / this._dimensions.device.canvas.width;
     array[offset + 1] = y1 / this._dimensions.device.canvas.height;
     array[offset + 2] = width / this._dimensions.device.canvas.width;
     array[offset + 3] = height / this._dimensions.device.canvas.height;
@@ -361,7 +362,7 @@ export class RectangleRenderer extends Disposable {
   }
 
   private _addRectangleFloat(array: Float32Array, offset: number, x1: number, y1: number, width: number, height: number, color: Float32Array): void {
-    array[offset    ] = x1 / this._dimensions.device.canvas.width;
+    array[offset] = x1 / this._dimensions.device.canvas.width;
     array[offset + 1] = y1 / this._dimensions.device.canvas.height;
     array[offset + 2] = width / this._dimensions.device.canvas.width;
     array[offset + 3] = height / this._dimensions.device.canvas.height;
@@ -375,8 +376,8 @@ export class RectangleRenderer extends Disposable {
     return new Float32Array([
       ((color.rgba >> 24) & 0xFF) / 255,
       ((color.rgba >> 16) & 0xFF) / 255,
-      ((color.rgba >> 8 ) & 0xFF) / 255,
-      ((color.rgba      ) & 0xFF) / 255
+      ((color.rgba >> 8) & 0xFF) / 255,
+      ((color.rgba) & 0xFF) / 255
     ]);
   }
 }
