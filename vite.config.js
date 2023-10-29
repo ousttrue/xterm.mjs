@@ -1,4 +1,5 @@
 import * as path from "path";
+import { importMaps } from 'vite-plugin-import-maps';
 
 // vite.config.js
 export default {
@@ -12,5 +13,13 @@ export default {
     },
   },
   plugins: [
-  ]
+    importMaps([
+      {
+        imports: {
+          "three": "https://unpkg.com/three@v0.157.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@v0.157.0/examples/jsm/"
+        },
+      },
+    ]),
+  ],
 }
