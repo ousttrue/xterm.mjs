@@ -27,10 +27,10 @@ export default class RectTarget {
       ]), 3));
     geometry.setAttribute('uv', new THREE
       .BufferAttribute(new Float32Array([
-        0, 0,
         0, 1,
-        1, 1,
+        0, 0,
         1, 0,
+        1, 1,
       ]), 2));
     geometry.setIndex([0, 1, 2, 2, 3, 0]);
 

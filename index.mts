@@ -13,7 +13,6 @@ class Fbo {
   height = 0;
 
   constructor(private _gl: WebGL2RenderingContext) {
-    this.wrap = new THREE.Texture();
   }
 
   getOrCreate(width: number, height: number, r: THREE.Renderer): [WebGLFramebuffer, THREE.Texture] {
@@ -36,12 +35,12 @@ class Fbo {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
 
     this.frameBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.fTexture, 0);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindTexture(gl.TEXTURE_2D, null);
 
     // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
     const forceTextureInitialization = function() {
@@ -56,6 +55,7 @@ class Fbo {
         r.render(scene, camera);
       };
     }();
+    this.wrap = new THREE.Texture();
     forceTextureInitialization(this.wrap);  // force three.js to init the texture
     const texProps = r.properties.get(this.wrap);
     texProps.__webglTexture = this.fTexture;
@@ -102,6 +102,7 @@ class ThreejsScene {
       // console.log('endFrame', rt);
       this.outer.Update(this.state.CursorScreen, texture);
       this.state._renderer.render(this.outer.Scene, this.outer.Camera);
+      this.state._renderer.resetState();
     }
   }
 }
@@ -152,6 +153,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
     // return texture;
     threejsScene.endFrame(texture);
+    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   animate();
