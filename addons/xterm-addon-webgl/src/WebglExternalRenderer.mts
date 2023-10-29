@@ -273,7 +273,9 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     this._invalidate.push({ start, end });
   }
 
-  public render(): void {
+  public render(w: number, h: number): void {
+    resizeTo(w, h);
+
     for (const { start, end } of this._invalidate) {
       if (!this._isAttached) {
         if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
