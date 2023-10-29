@@ -1,11 +1,59 @@
+import * as THREE from "three";
 import { Terminal as TerminalCore } from "./src/browser/Terminal.mts";
 import { WebglExternalAddon } from "./addons/xterm-addon-webgl/src/WebglExternalAddon.mts";
 import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 import RectTarget from './recttarget.mts';
-import SceneTarget from './scenetarget.mts';
 import State from './state.mts'
 
-document.addEventListener("DOMContentLoaded", (event) => {
+class ThreejsScene {
+  rt?: THREE.WebGLRenderTarget<THREE.Texture>;
+  outer: RectTarget;
+  state: State;
+  constructor(canvas: HTMLCanvasElement, private _gl: WebGL2RenderingContext) {
+    this.outer = new RectTarget();
+
+    this.state = new State(canvas, this._gl,
+      (dx, dy) => {
+        this.outer.Rect.x += dx;
+        this.outer.Rect.y += dy;
+      },
+      (dx, dy) => {
+        this.outer.Rect.width += dx;
+        this.outer.Rect.height += dy;
+      });
+  }
+
+  beginFrame(): THREE.WebGLRenderTarget<THREE.Texture> | null {
+    const w = this.outer.Rect.width;
+    const h = this.outer.Rect.height;
+    if (w > 0 && h > 0) {
+      if (!this.rt || w != this.rt.width || h != this.rt.height) {
+        console.log('create rt', w, h)
+        this.rt = new THREE.WebGLRenderTarget(w, h);
+      }
+      const framebuffer = this.rt.__webglFramebuffer;
+      this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, framebuffer);
+      this._gl.viewport(0, 0, w, h);
+      this._gl.clearColor(1, 0, 0, 1);
+      this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+    }
+
+    return this.rt;
+  }
+
+  endFrame(rt: THREE.WebGLRenderTarget<THREE.Texture>) {
+    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+    this.state._renderer.resetState();
+    this.state._renderer.setRenderTarget(null);
+    if (rt) {
+      // console.log('endFrame', rt);
+      this.outer.Update(this.state.CursorScreen, rt.texture);
+      this.state._renderer.render(this.outer.Scene, this.outer.Camera);
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async (event) => {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
   var w = canvas.clientWidth;
@@ -18,19 +66,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
   console.log(gl);
   console.log(canvas);
 
-  // const inner = new SceneTarget();
-  // const outer = new RectTarget();
-  // outer.Load(inner.Target?.texture);
-  //
-  // const state = new State(canvas, gl,
-  //   (dx, dy) => {
-  //     outer.Rect.x += dx;
-  //     outer.Rect.y += dy;
-  //   },
-  //   (dx, dy) => {
-  //     outer.Rect.width += dx;
-  //     outer.Rect.height += dy;
-  //   });
+  const threejsScene = new ThreejsScene(canvas, gl);
+  await threejsScene.outer.Load();
 
   const term = new TerminalCore();
   if (term.open) {
@@ -48,21 +85,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
   function animate() {
     requestAnimationFrame(animate);
 
-    // const w = outer.Rect.width;
-    // const h = outer.Rect.height;
-    // inner.Update(w, h);
-    // outer.Update(state.CursorScreen);
-
-    // render to fbo
-    // state._renderer.setRenderTarget(inner.Target);
-    // state._renderer.render(inner.Scene, inner.Camera);
+    const rt = threejsScene.beginFrame();
     addon._renderer.render();
-
-    // render to canvas
-    // state._renderer.resetState();
-    // state._renderer.setRenderTarget(outer.Target);
-    // state._renderer.render(outer.Scene, outer.Camera);
+    threejsScene.endFrame(rt);
   }
+
   animate();
 });
 

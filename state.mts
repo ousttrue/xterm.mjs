@@ -12,6 +12,9 @@ export default class State {
     on1: (arg0: number, arg1: number) => void) {
     this._renderer = new THREE.WebGLRenderer({ canvas, context });
     this._renderer.setPixelRatio(window.devicePixelRatio);
+    this.CursorScreen.width = canvas.width;
+    this.CursorScreen.height = canvas.height;
+
     this._observeSize(canvas);
     window.addEventListener('mousedown', e => {
       switch (e.button) {
