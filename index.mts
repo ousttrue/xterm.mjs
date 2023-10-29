@@ -5,8 +5,68 @@ import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 import RectTarget from './recttarget.mts';
 import State from './state.mts'
 
+class Fbo {
+  frameBuffer: WebGLFramebuffer;
+  fTexture: WebGLTexture;
+  wrap: THREE.Texture;
+  width = 0;
+  height = 0;
+
+  constructor(private _gl: WebGL2RenderingContext) {
+    this.wrap = new THREE.Texture();
+  }
+
+  getOrCreate(width: number, height: number, r: THREE.Renderer): [WebGLFramebuffer, THREE.Texture] {
+    const gl = this._gl;
+    if (this.frameBuffer && width == this.width && height == this.height) {
+      return [this.frameBuffer, this.wrap];
+    }
+
+    if (this.frameBuffer) {
+      gl.deleteFramebuffer(this.frameBuffer);
+      gl.deleteTexture(this.fTexture);
+    }
+    this.width = width;
+    this.height = height;
+
+    this.fTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.fTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    this.frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.fTexture, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
+    const forceTextureInitialization = function() {
+      const material = new THREE.MeshBasicMaterial();
+      const geometry = new THREE.BoxGeometry();
+      const scene = new THREE.Scene();
+      scene.add(new THREE.Mesh(geometry, material));
+      const camera = new THREE.Camera();
+
+      return function forceTextureInitialization(texture) {
+        material.map = texture;
+        r.render(scene, camera);
+      };
+    }();
+    forceTextureInitialization(this.wrap);  // force three.js to init the texture
+    const texProps = r.properties.get(this.wrap);
+    texProps.__webglTexture = this.fTexture;
+
+    console.log('create fbo', width, height, this.frameBuffer);
+    return [this.frameBuffer, this.wrap];
+  }
+}
+
 class ThreejsScene {
-  rt?: THREE.WebGLRenderTarget<THREE.Texture>;
+  fbo: Fbo;
   outer: RectTarget;
   state: State;
   constructor(canvas: HTMLCanvasElement, private _gl: WebGL2RenderingContext) {
@@ -21,33 +81,26 @@ class ThreejsScene {
         this.outer.Rect.width += dx;
         this.outer.Rect.height += dy;
       });
+
+    this.fbo = new Fbo(this._gl);
   }
 
-  beginFrame(): THREE.WebGLRenderTarget<THREE.Texture> | null {
+  beginFrame(): [WebGLFramebuffer, WebGLTexture, number, number] | null {
     const w = this.outer.Rect.width;
     const h = this.outer.Rect.height;
-    if (w > 0 && h > 0) {
-      if (!this.rt || w != this.rt.width || h != this.rt.height) {
-        console.log('create rt', w, h)
-        this.rt = new THREE.WebGLRenderTarget(w, h);
-      }
-      const framebuffer = this.rt.__webglFramebuffer;
-      this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, framebuffer);
-      this._gl.viewport(0, 0, w, h);
-      this._gl.clearColor(1, 0, 0, 1);
-      this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+    if (w == 0 || h == 0) {
+      return;
     }
 
-    return this.rt;
+    const [fbo, texture] = this.fbo.getOrCreate(w, h, this.state._renderer);
+    return [fbo, texture, w, h];
   }
 
-  endFrame(rt: THREE.WebGLRenderTarget<THREE.Texture>) {
-    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+  endFrame(texture: THREE.Texture) {
     this.state._renderer.resetState();
-    this.state._renderer.setRenderTarget(null);
-    if (rt) {
+    if (texture) {
       // console.log('endFrame', rt);
-      this.outer.Update(this.state.CursorScreen, rt.texture);
+      this.outer.Update(this.state.CursorScreen, texture);
       this.state._renderer.render(this.outer.Scene, this.outer.Camera);
     }
   }
@@ -85,9 +138,20 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   function animate() {
     requestAnimationFrame(animate);
 
-    const rt = threejsScene.beginFrame();
+    const [fbo, texture, w, h] = threejsScene.beginFrame();
+    // console.log(fbo, texture);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.viewport(0, 0, w, h);
+    // gl.clearColor(1, 0, 0, 1);
+    // gl.clear(gl.COLOR_BUFFER_BIT);
     addon._renderer.render();
-    threejsScene.endFrame(rt);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.clearColor(0, 0, 0, 0);
+
+    // return texture;
+    threejsScene.endFrame(texture);
   }
 
   animate();

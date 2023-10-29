@@ -52,6 +52,7 @@ export default class RectTarget {
 
   Update(cursorScreen: THREE.Vector4, texture: THREE.Texture) {
     if (this.Material) {
+      // console.log(texture);
       this.Material.uniforms.uCursorScreen = { value: cursorScreen }
       this.Material.uniforms.uRect = { value: this.Rect };
       this.Material.uniforms.uTexture = new THREE.Uniform(texture);
