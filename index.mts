@@ -5,6 +5,27 @@ import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 import RectTarget from './recttarget.mts';
 import State from './state.mts'
 
+function wrapTexture(r: THREE.Renderer, texture: WebGLTexture): THREE.Texture {
+  // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
+  const forceTextureInitialization = function() {
+    const material = new THREE.MeshBasicMaterial();
+    const geometry = new THREE.BoxGeometry();
+    const scene = new THREE.Scene();
+    scene.add(new THREE.Mesh(geometry, material));
+    const camera = new THREE.Camera();
+
+    return function forceTextureInitialization(tex: THREE.Texture) {
+      material.map = tex;
+      r.render(scene, camera);
+    };
+  }();
+  const wrap = new THREE.Texture();
+  forceTextureInitialization(wrap);  // force three.js to init the texture
+  const texProps = r.properties.get(wrap);
+  texProps.__webglTexture = texture;
+  return wrap;
+}
+
 class Fbo {
   frameBuffer: WebGLFramebuffer;
   fTexture: WebGLTexture;
@@ -15,7 +36,8 @@ class Fbo {
   constructor(private _gl: WebGL2RenderingContext) {
   }
 
-  getOrCreate(width: number, height: number, r: THREE.Renderer): [WebGLFramebuffer, THREE.Texture] {
+  getOrCreate(width: number, height: number, r: THREE.Renderer)
+    : [WebGLFramebuffer, THREE.Texture] {
     const gl = this._gl;
     if (this.frameBuffer && width == this.width && height == this.height) {
       return [this.frameBuffer, this.wrap];
@@ -42,23 +64,7 @@ class Fbo {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.fTexture, 0);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
-    const forceTextureInitialization = function() {
-      const material = new THREE.MeshBasicMaterial();
-      const geometry = new THREE.BoxGeometry();
-      const scene = new THREE.Scene();
-      scene.add(new THREE.Mesh(geometry, material));
-      const camera = new THREE.Camera();
-
-      return function forceTextureInitialization(texture) {
-        material.map = texture;
-        r.render(scene, camera);
-      };
-    }();
-    this.wrap = new THREE.Texture();
-    forceTextureInitialization(this.wrap);  // force three.js to init the texture
-    const texProps = r.properties.get(this.wrap);
-    texProps.__webglTexture = this.fTexture;
+    this.wrap = wrapTexture(r, this.fTexture);
 
     console.log('create fbo', width, height, this.frameBuffer);
     return [this.frameBuffer, this.wrap];
@@ -85,7 +91,7 @@ class ThreejsScene {
     this.fbo = new Fbo(this._gl);
   }
 
-  beginFrame(): [WebGLFramebuffer, WebGLTexture, number, number] | null {
+  beginFrame(): [WebGLFramebuffer, THREE.Texture, number, number] | null {
     const w = this.outer.Rect.width;
     const h = this.outer.Rect.height;
     if (w == 0 || h == 0) {
@@ -140,18 +146,17 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     requestAnimationFrame(animate);
 
     const [fbo, texture, w, h] = threejsScene.beginFrame();
-    // console.log(fbo, texture);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, w, h);
-    // gl.clearColor(1, 0, 0, 1);
-    // gl.clear(gl.COLOR_BUFFER_BIT);
-    addon._renderer.render();
+
+    for (const { start, end } of addon._renderer.Invalidates) {
+      addon._renderer.render(start, end);
+    }
+    addon._renderer.Invalidates.length = 0;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.clearColor(0, 0, 0, 0);
 
-    // return texture;
     threejsScene.endFrame(texture);
     gl.bindTexture(gl.TEXTURE_2D, null);
   }

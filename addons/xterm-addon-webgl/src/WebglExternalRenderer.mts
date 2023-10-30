@@ -29,7 +29,6 @@ import { IRenderLayer } from './renderLayer/Types.mjs';
 import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi.mjs';
 
 export class WebglExternalRenderer extends Disposable implements IRenderer {
-  private _renderLayers: IRenderLayer[];
   private _cursorBlinkStateManager: MutableDisposable<CursorBlinkStateManager> = new MutableDisposable();
   private _charAtlasDisposable = this.register(new MutableDisposable());
   private _charAtlas: ITextureAtlas | undefined;
@@ -57,7 +56,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   public readonly onRequestRedraw = this._onRequestRedraw.event;
   private readonly _onContextLoss = this.register(new EventEmitter<void>());
   public readonly onContextLoss = this._onContextLoss.event;
-  private _invalidate: { start: number, end: number }[] = [];
+  public Invalidates: { start: number, end: number }[] = [];
 
   constructor(
     private _gl: IWebGL2RenderingContext,
@@ -76,9 +75,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     this.register(this._themeService.onChangeColors(() => this._handleColorChange()));
 
     this._cellColorResolver = new CellColorResolver(this._core, this._model.selection, this._decorationService, this._coreBrowserService, this._themeService);
-    this._renderLayers = [
-      new LinkRenderLayer(this._core.screenElement!, 2, this._core, this._core.linkifier2, this._coreBrowserService, _optionsService, this._themeService)
-    ];
     this.dimensions = createRenderDimensions();
     this._devicePixelRatio = this._coreBrowserService.dpr;
     this._updateDimensions();
@@ -90,9 +86,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     this._isAttached = this._coreBrowserService.window.document.body.contains(this._core.screenElement!);
 
     this.register(toDisposable(() => {
-      for (const l of this._renderLayers) {
-        l.dispose();
-      }
       removeTerminalFromCache(this._core);
     }));
   }
@@ -123,11 +116,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
     this._model.resize(this._core.cols, this._core.rows);
 
-    // Resize all render layers
-    for (const l of this._renderLayers) {
-      l.resize(this._core, this.dimensions);
-    }
-
     // Resize the screen
     this._core.screenElement!.style.width = `${this.dimensions.css.canvas.width}px`;
     this._core.screenElement!.style.height = `${this.dimensions.css.canvas.height}px`;
@@ -149,35 +137,23 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   }
 
   public handleBlur(): void {
-    for (const l of this._renderLayers) {
-      l.handleBlur(this._core);
-    }
     this._cursorBlinkStateManager.value?.pause();
     // Request a redraw for active/inactive selection background
     this._requestRedrawViewport();
   }
 
   public handleFocus(): void {
-    for (const l of this._renderLayers) {
-      l.handleFocus(this._core);
-    }
     this._cursorBlinkStateManager.value?.resume();
     // Request a redraw for active/inactive selection background
     this._requestRedrawViewport();
   }
 
   public handleSelectionChanged(start: [number, number] | undefined, end: [number, number] | undefined, columnSelectMode: boolean): void {
-    for (const l of this._renderLayers) {
-      l.handleSelectionChanged(this._core, start, end, columnSelectMode);
-    }
     this._model.selection.update(this._core, start, end, columnSelectMode);
     this._requestRedrawViewport();
   }
 
   public handleCursorMove(): void {
-    for (const l of this._renderLayers) {
-      l.handleCursorMove(this._core);
-    }
     this._cursorBlinkStateManager.value?.restartBlinkAnimation();
   }
 
@@ -252,10 +228,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public clear(): void {
     this._clearModel(true);
-    for (const l of this._renderLayers) {
-      l.reset(this._core);
-    }
-
     this._cursorBlinkStateManager.value?.restartBlinkAnimation();
     this._updateCursorBlink();
   }
@@ -270,49 +242,42 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public renderRows(start: number, end: number): void {
     console.log(`${start} => ${end}`);
-    this._invalidate.push({ start, end });
+    this.Invalidates.push({ start, end });
   }
 
-  public render(): void {
-    for (const { start, end } of this._invalidate) {
-      if (!this._isAttached) {
-        if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
-          this._updateDimensions();
-          this._refreshCharAtlas();
-          this._isAttached = true;
-        } else {
-          return;
-        }
-      }
-
-      // Update render layers
-      for (const l of this._renderLayers) {
-        l.handleGridChanged(this._core, start, end);
-      }
-
-      if (!this._glyphRenderer.value || !this._rectangleRenderer.value) {
+  public render(start: number, end: number): void {
+    if (!this._isAttached) {
+      if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
+        this._updateDimensions();
+        this._refreshCharAtlas();
+        this._isAttached = true;
+      } else {
         return;
       }
-
-      // Tell renderer the frame is beginning
-      // upon a model clear also refresh the full viewport model
-      // (also triggered by an atlas page merge, part of #4480)
-      if (this._glyphRenderer.value.beginFrame()) {
-        this._clearModel(true);
-        this._updateModel(0, this._core.rows - 1);
-      } else {
-        // just update changed lines to draw
-        this._updateModel(start, end);
-      }
-
-      // Render
-      this._rectangleRenderer.value.renderBackgrounds();
-      this._glyphRenderer.value.render(this._model);
-      if (!this._cursorBlinkStateManager.value || this._cursorBlinkStateManager.value.isCursorVisible) {
-        this._rectangleRenderer.value.renderCursor();
-      }
     }
-    this._invalidate.length = 0;
+
+    // Update render layers
+    if (!this._glyphRenderer.value || !this._rectangleRenderer.value) {
+      return;
+    }
+
+    // Tell renderer the frame is beginning
+    // upon a model clear also refresh the full viewport model
+    // (also triggered by an atlas page merge, part of #4480)
+    if (this._glyphRenderer.value.beginFrame()) {
+      this._clearModel(true);
+      this._updateModel(0, this._core.rows - 1);
+    } else {
+      // just update changed lines to draw
+      this._updateModel(start, end);
+    }
+
+    // Render
+    this._rectangleRenderer.value.renderBackgrounds();
+    this._glyphRenderer.value.render(this._model);
+    if (!this._cursorBlinkStateManager.value || this._cursorBlinkStateManager.value.isCursorVisible) {
+      this._rectangleRenderer.value.renderCursor();
+    }
   }
 
   private _updateCursorBlink(): void {

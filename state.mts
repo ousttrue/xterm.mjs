@@ -12,8 +12,8 @@ export default class State {
     on1: (arg0: number, arg1: number) => void) {
     this._renderer = new THREE.WebGLRenderer({ canvas, context });
     this._renderer.setPixelRatio(window.devicePixelRatio);
-    this.CursorScreen.width = canvas.width;
-    this.CursorScreen.height = canvas.height;
+    this.CursorScreen.width = Math.ceil(canvas.width);
+    this.CursorScreen.height = Math.ceil(canvas.height);
 
     this._observeSize(canvas);
     window.addEventListener('mousedown', e => {
@@ -58,8 +58,8 @@ export default class State {
       }
 
       // Fire the callback, ignore events where the dimensions are 0x0 as the canvas is likely hidden
-      const width = entry.contentBoxSize[0].inlineSize;
-      const height = entry.contentBoxSize[0].blockSize;
+      const width = Math.ceil(entry.contentBoxSize[0].inlineSize);
+      const height = Math.ceil(entry.contentBoxSize[0].blockSize);
       if (width > 0 && height > 0) {
         this._onResize(width, height);
       }
