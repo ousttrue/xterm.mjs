@@ -28,6 +28,13 @@ import { LinkRenderLayer } from './renderLayer/LinkRenderLayer.mjs';
 import { IRenderLayer } from './renderLayer/Types.mjs';
 import { BufferNamespaceApi } from 'common/public/BufferNamespaceApi.mjs';
 
+type Cursor = {
+  cursorY: number,
+  cursorX: number,
+  lastCursorX: number,
+  isCursorVisible: boolean,
+};
+
 export class WebglExternalRenderer extends Disposable implements IRenderer {
   private _cursorBlinkStateManager: MutableDisposable<CursorBlinkStateManager> = new MutableDisposable();
   private _charAtlasDisposable = this.register(new MutableDisposable());
@@ -295,11 +302,9 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   private _updateModel(start: number, end: number): void {
     const terminal = this._core;
-    let cell: ICellData = this._workCell;
 
     // Declare variable ahead of time to avoid garbage collection
     let lastBg: number;
-    let y: number;
     let row: number;
     let line: IBufferLine;
     let joinedRanges: [number, number][];
@@ -314,133 +319,145 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     start = clamp(start, terminal.rows - 1, 0);
     end = clamp(end, terminal.rows - 1, 0);
 
-    const cursorY = this._buffer.active.baseY + this._buffer.active.cursorY;
-    // in case cursor.x == cols adjust visual cursor to cols - 1
-    const cursorX = Math.min(this._buffer.active.cursorX, terminal.cols - 1);
-    let lastCursorX = -1;
-    const isCursorVisible =
-      this._coreService.isCursorInitialized &&
-      !this._coreService.isCursorHidden &&
-      (!this._cursorBlinkStateManager.value || this._cursorBlinkStateManager.value.isCursorVisible);
+    const cursor = {
+      cursorY: this._buffer.active.baseY + this._buffer.active.cursorY,
+      // in case cursor.x == cols adjust visual cursor to cols - 1
+      cursorX: Math.min(this._buffer.active.cursorX, terminal.cols - 1),
+      lastCursorX: -1,
+      isCursorVisible:
+        this._coreService.isCursorInitialized &&
+        !this._coreService.isCursorHidden &&
+        (!this._cursorBlinkStateManager.value || this._cursorBlinkStateManager.value.isCursorVisible),
+    };
     this._model.cursor = undefined;
     let modelUpdated = false;
-
-    for (y = start; y <= end; y++) {
-      row = y + terminal.buffer.ydisp;
-      line = terminal.buffer.lines.get(row)!;
-      this._model.lineLengths[y] = 0;
-      joinedRanges = this._characterJoinerService.getJoinedCharacters(row);
-      for (x = 0; x < terminal.cols; x++) {
-        lastBg = this._cellColorResolver.result.bg;
-        line.loadCell(x, cell);
-
-        if (x === 0) {
-          lastBg = this._cellColorResolver.result.bg;
-        }
-
-        // If true, indicates that the current character(s) to draw were joined.
-        isJoined = false;
-        lastCharX = x;
-
-        // Process any joined character ranges as needed. Because of how the
-        // ranges are produced, we know that they are valid for the characters
-        // and attributes of our input.
-        if (joinedRanges.length > 0 && x === joinedRanges[0][0]) {
-          isJoined = true;
-          range = joinedRanges.shift()!;
-
-          // We already know the exact start and end column of the joined range,
-          // so we get the string and width representing it directly.
-          cell = new JoinedCellData(
-            cell,
-            line!.translateToString(true, range[0], range[1]),
-            range[1] - range[0]
-          );
-
-          // Skip over the cells occupied by this range in the loop
-          lastCharX = range[1] - 1;
-        }
-
-        chars = cell.getChars();
-        code = cell.getCode();
-        i = ((y * terminal.cols) + x) * RENDER_MODEL_INDICIES_PER_CELL;
-
-        // Load colors/resolve overrides into work colors
-        this._cellColorResolver.resolve(cell, x, row);
-
-        // Override colors for cursor cell
-        if (isCursorVisible && row === cursorY) {
-          if (x === cursorX) {
-            this._model.cursor = {
-              x: cursorX,
-              y: this._buffer.active.cursorY,
-              width: cell.getWidth(),
-              style: this._coreBrowserService.isFocused ?
-                (terminal.options.cursorStyle || 'block') : terminal.options.cursorInactiveStyle,
-              cursorWidth: terminal.options.cursorWidth,
-              dpr: this._devicePixelRatio
-            };
-            lastCursorX = cursorX + cell.getWidth() - 1;
-          }
-          if (x >= cursorX && x <= lastCursorX &&
-            ((this._coreBrowserService.isFocused &&
-              (terminal.options.cursorStyle || 'block') === 'block') ||
-              (this._coreBrowserService.isFocused === false &&
-                terminal.options.cursorInactiveStyle === 'block'))) {
-            this._cellColorResolver.result.fg =
-              Attributes.CM_RGB | (this._themeService.colors.cursorAccent.rgba >> 8 & Attributes.RGB_MASK);
-            this._cellColorResolver.result.bg =
-              Attributes.CM_RGB | (this._themeService.colors.cursor.rgba >> 8 & Attributes.RGB_MASK);
-          }
-        }
-
-        if (code !== NULL_CELL_CODE) {
-          this._model.lineLengths[y] = x + 1;
-        }
-
-        // Nothing has changed, no updates needed
-        if (this._model.cells[i] === code &&
-          this._model.cells[i + RENDER_MODEL_BG_OFFSET] === this._cellColorResolver.result.bg &&
-          this._model.cells[i + RENDER_MODEL_FG_OFFSET] === this._cellColorResolver.result.fg &&
-          this._model.cells[i + RENDER_MODEL_EXT_OFFSET] === this._cellColorResolver.result.ext) {
-          continue;
-        }
-
+    for (let y = start; y <= end; y++) {
+      if (this._updateModelLine(y, cursor)) {
         modelUpdated = true;
-
-        // Flag combined chars with a bit mask so they're easily identifiable
-        if (chars.length > 1) {
-          code |= COMBINED_CHAR_BIT_MASK;
-        }
-
-        // Cache the results in the model
-        this._model.cells[i] = code;
-        this._model.cells[i + RENDER_MODEL_BG_OFFSET] = this._cellColorResolver.result.bg;
-        this._model.cells[i + RENDER_MODEL_FG_OFFSET] = this._cellColorResolver.result.fg;
-        this._model.cells[i + RENDER_MODEL_EXT_OFFSET] = this._cellColorResolver.result.ext;
-
-        this._glyphRenderer.value!.updateCell(x, y, code, this._cellColorResolver.result.bg, this._cellColorResolver.result.fg, this._cellColorResolver.result.ext, chars, lastBg);
-
-        if (isJoined) {
-          // Restore work cell
-          cell = this._workCell;
-
-          // Null out non-first cells
-          for (x++; x < lastCharX; x++) {
-            j = ((y * terminal.cols) + x) * RENDER_MODEL_INDICIES_PER_CELL;
-            this._glyphRenderer.value!.updateCell(x, y, NULL_CELL_CODE, 0, 0, 0, NULL_CELL_CHAR, 0);
-            this._model.cells[j] = NULL_CELL_CODE;
-            this._model.cells[j + RENDER_MODEL_BG_OFFSET] = this._cellColorResolver.result.bg;
-            this._model.cells[j + RENDER_MODEL_FG_OFFSET] = this._cellColorResolver.result.fg;
-            this._model.cells[j + RENDER_MODEL_EXT_OFFSET] = this._cellColorResolver.result.ext;
-          }
-        }
       }
     }
     if (modelUpdated) {
       this._rectangleRenderer.value!.updateBackgrounds(this._model);
     }
     this._rectangleRenderer.value!.updateCursor(this._model);
+  }
+
+  _updateModelLine(y: number, cursor: Cursor): boolean {
+    const terminal = this._core;
+    let cell: ICellData = this._workCell;
+    const row = y + terminal.buffer.ydisp;
+    const line = terminal.buffer.lines.get(row)!;
+    this._model.lineLengths[y] = 0;
+    const joinedRanges = this._characterJoinerService.getJoinedCharacters(row);
+    let modelUpdated = false;
+    for (let x = 0; x < terminal.cols; x++) {
+      line.loadCell(x, cell);
+
+      let lastBg = this._cellColorResolver.result.bg;
+      if (x === 0) {
+        lastBg = this._cellColorResolver.result.bg;
+      }
+
+      // If true, indicates that the current character(s) to draw were joined.
+      let isJoined = false;
+      let lastCharX = x;
+
+      // Process any joined character ranges as needed. Because of how the
+      // ranges are produced, we know that they are valid for the characters
+      // and attributes of our input.
+      if (joinedRanges.length > 0 && x === joinedRanges[0][0]) {
+        isJoined = true;
+        const range = joinedRanges.shift()!;
+
+        // We already know the exact start and end column of the joined range,
+        // so we get the string and width representing it directly.
+        cell = new JoinedCellData(
+          cell,
+          line!.translateToString(true, range[0], range[1]),
+          range[1] - range[0]
+        );
+
+        // Skip over the cells occupied by this range in the loop
+        lastCharX = range[1] - 1;
+      }
+
+      const chars = cell.getChars();
+      let code = cell.getCode();
+      const i = ((y * terminal.cols) + x) * RENDER_MODEL_INDICIES_PER_CELL;
+
+      // Load colors/resolve overrides into work colors
+      this._cellColorResolver.resolve(cell, x, row);
+
+      // Override colors for cursor cell
+      if (cursor.isCursorVisible && row === cursor.cursorY) {
+        if (x === cursor.cursorX) {
+          this._model.cursor = {
+            x: cursor.cursorX,
+            y: this._buffer.active.cursorY,
+            width: cell.getWidth(),
+            style: this._coreBrowserService.isFocused ?
+              (terminal.options.cursorStyle || 'block') : terminal.options.cursorInactiveStyle,
+            cursorWidth: terminal.options.cursorWidth,
+            dpr: this._devicePixelRatio
+          };
+          cursor.lastCursorX = cursor.cursorX + cell.getWidth() - 1;
+        }
+        if (x >= cursor.cursorX && x <= cursor.lastCursorX &&
+          ((this._coreBrowserService.isFocused &&
+            (terminal.options.cursorStyle || 'block') === 'block') ||
+            (this._coreBrowserService.isFocused === false &&
+              terminal.options.cursorInactiveStyle === 'block'))) {
+          this._cellColorResolver.result.fg =
+            Attributes.CM_RGB | (this._themeService.colors.cursorAccent.rgba >> 8 & Attributes.RGB_MASK);
+          this._cellColorResolver.result.bg =
+            Attributes.CM_RGB | (this._themeService.colors.cursor.rgba >> 8 & Attributes.RGB_MASK);
+        }
+      }
+
+      if (code !== NULL_CELL_CODE) {
+        this._model.lineLengths[y] = x + 1;
+      }
+
+      // Nothing has changed, no updates needed
+      if (this._model.cells[i] === code &&
+        this._model.cells[i + RENDER_MODEL_BG_OFFSET] === this._cellColorResolver.result.bg &&
+        this._model.cells[i + RENDER_MODEL_FG_OFFSET] === this._cellColorResolver.result.fg &&
+        this._model.cells[i + RENDER_MODEL_EXT_OFFSET] === this._cellColorResolver.result.ext) {
+        continue;
+      }
+
+      modelUpdated = true;
+
+      // Flag combined chars with a bit mask so they're easily identifiable
+      if (chars.length > 1) {
+        code |= COMBINED_CHAR_BIT_MASK;
+      }
+
+      // Cache the results in the model
+      this._model.cells[i] = code;
+      this._model.cells[i + RENDER_MODEL_BG_OFFSET] = this._cellColorResolver.result.bg;
+      this._model.cells[i + RENDER_MODEL_FG_OFFSET] = this._cellColorResolver.result.fg;
+      this._model.cells[i + RENDER_MODEL_EXT_OFFSET] = this._cellColorResolver.result.ext;
+
+      this._glyphRenderer.value!.updateCell(x, y, code, this._cellColorResolver.result.bg, this._cellColorResolver.result.fg, this._cellColorResolver.result.ext, chars, lastBg);
+
+      if (isJoined) {
+        // Restore work cell
+        cell = this._workCell;
+
+        // Null out non-first cells
+        for (x++; x < lastCharX; x++) {
+          const j = ((y * terminal.cols) + x) * RENDER_MODEL_INDICIES_PER_CELL;
+          this._glyphRenderer.value!.updateCell(x, y, NULL_CELL_CODE, 0, 0, 0, NULL_CELL_CHAR, 0);
+          this._model.cells[j] = NULL_CELL_CODE;
+          this._model.cells[j + RENDER_MODEL_BG_OFFSET] = this._cellColorResolver.result.bg;
+          this._model.cells[j + RENDER_MODEL_FG_OFFSET] = this._cellColorResolver.result.fg;
+          this._model.cells[j + RENDER_MODEL_EXT_OFFSET] = this._cellColorResolver.result.ext;
+        }
+      }
+    }
+
+    return modelUpdated;
   }
 
   /**
