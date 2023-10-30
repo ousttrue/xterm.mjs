@@ -2,6 +2,18 @@
 
 Xterm.js is a front-end component written in TypeScript that lets applications bring fully-featured terminals to their users in the browser. It's used by popular projects such as VS Code, Hyper and Theia.
 
+## memo
+
+- BufferService => rows, cols
+- CharSizeService => width, height
+- RenderService => redraw
+
+👇
+
+- Renderer
+  - RectangleRenderer
+  - GlyphRenderer
+
 ## mjs fork
 
 Works with [index.html](./index.html).
