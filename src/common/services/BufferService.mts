@@ -40,6 +40,7 @@ export class BufferService extends Disposable implements IBufferService {
   }
 
   public resize(cols: number, rows: number): void {
+    console.log('BufferService', cols, rows);
     this.cols = cols;
     this.rows = rows;
     this.buffers.resize(cols, rows);

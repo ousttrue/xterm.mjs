@@ -4,9 +4,12 @@ import { WebglExternalRenderer } from "./addons/xterm-addon-webgl/src/WebglExter
 import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 import RectTarget from './recttarget.mts';
 import State from './state.mts'
-import { Disposable } from "./src/common/Lifecycle.mts";
-import { ICharSizeService } from "./src/browser/services/Services.mts";
-import { EventEmitter } from "./src/common/EventEmitter.mts";
+import { Disposable, MutableDisposable } from "./src/common/Lifecycle.mts";
+import { ICharSizeService, IRenderService } from "./src/browser/services/Services.mts";
+import { EventEmitter, IEvent } from "./src/common/EventEmitter.mts";
+import { IRenderDimensions, IRenderer } from "./src/browser/renderer/shared/Types.mts";
+import { IRenderDebouncerWithCallback } from "./src/browser/Types.mts";
+import { IBufferService } from "./src/common/services/Services.mts";
 
 function wrapTexture(r: THREE.Renderer, texture: WebGLTexture): THREE.Texture {
   // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
@@ -120,6 +123,8 @@ class FixedCharSizeService extends Disposable implements ICharSizeService {
   public serviceBrand: undefined;
   public width: number = 0;
   public height: number = 0;
+  private _width: number = 0;
+  private _height: number = 0;
   public get hasValidSize(): boolean { return this.width > 0 && this.height > 0; }
   private readonly _onCharSizeChange = this.register(new EventEmitter<void>());
   public readonly onCharSizeChange = this._onCharSizeChange.event;
@@ -128,12 +133,12 @@ class FixedCharSizeService extends Disposable implements ICharSizeService {
     super();
   }
   setSize(width: number, height: number) {
-    this.width = width;
-    this.height = height;
+    this._width = width;
+    this._height = height;
     this.measure();
   }
   public measure(): void {
-    const result = { width: 9, height: 17 };
+    const result = { width: this._width, height: this._height };
     if (result.width !== this.width || result.height !== this.height) {
       console.log(result);
       this.width = result.width;
@@ -171,19 +176,19 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
   // term._core = term;
   const charSizeService = new FixedCharSizeService();
-  charSizeService.setSize(24, 48);
+  charSizeService.setSize(9, 18);
 
   const addon = new WebglExternalRenderer(
     gl, term, buffer,
     charSizeService,
-    // term._charSizeService,
     term._coreBrowserService,
     term.coreService,
     term._decorationService,
     term.optionsService,
     term._themeService,
   );
-  term._renderService.setRenderer(addon);
+  const renderService = term._renderService;
+  renderService.setRenderer(addon);
 
   // const addon = new WebglExternalAddon(gl);
   // addon.activateCore(term, buffer, gl);
@@ -197,17 +202,16 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, w, h);
-    if (texture == lastTexture) {
-      for (const { start, end } of addon.Invalidates) {
-        addon.render(start, end);
-      }
+    if (texture != lastTexture) {
+      const cols = Math.floor(w / charSizeService.width);
+      const rows = Math.floor(h / charSizeService.height);
+      console.log('colsxrows', cols, rows);
+      term.resize(cols, rows);
+      lastTexture = texture;
     }
-    else {
-      // TODO: redraw
-      console.log('new texture');
-      addon.render(0, term.rows);
+    for (const { start, end } of addon.Invalidates) {
+      addon.render(start, end);
     }
-    lastTexture = texture;
     addon.Invalidates.length = 0;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
