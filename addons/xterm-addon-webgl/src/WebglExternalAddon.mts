@@ -62,7 +62,6 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     const optionsService: IOptionsService = core.optionsService;
     const unsafeCore = core as any;
     const renderService: IRenderService = unsafeCore._renderService;
-    const characterJoinerService: ICharacterJoinerService = unsafeCore._characterJoinerService;
     const charSizeService: ICharSizeService = unsafeCore._charSizeService;
     const coreBrowserService: ICoreBrowserService = unsafeCore._coreBrowserService;
     const decorationService: IDecorationService = unsafeCore._decorationService;
@@ -75,7 +74,6 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
 
     this._renderer = this.register(new WebglExternalRenderer(
       gl, core, buffer,
-      characterJoinerService,
       charSizeService,
       coreBrowserService,
       coreService,

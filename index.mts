@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   addon.activateCore(term, buffer, gl);
   term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
 
+  let lastTexture: THREE.Texture = null;
   function animate() {
     requestAnimationFrame(animate);
 
@@ -149,10 +150,17 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, w, h);
-
-    for (const { start, end } of addon._renderer.Invalidates) {
-      addon._renderer.render(start, end);
+    if (texture == lastTexture) {
+      for (const { start, end } of addon._renderer.Invalidates) {
+        addon._renderer.render(start, end);
+      }
     }
+    else {
+      // TODO: redraw
+      console.log('new texture');
+      addon._renderer.render(0, term.rows);
+    }
+    lastTexture = texture;
     addon._renderer.Invalidates.length = 0;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
