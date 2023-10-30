@@ -58,9 +58,9 @@ export class WebglExternalAddon extends Disposable implements ITerminalAddon {
     // workaround
     core._core = core;
 
+    const unsafeCore = core as any;
     const coreService: ICoreService = core.coreService;
     const optionsService: IOptionsService = core.optionsService;
-    const unsafeCore = core as any;
     const renderService: IRenderService = unsafeCore._renderService;
     const charSizeService: ICharSizeService = unsafeCore._charSizeService;
     const coreBrowserService: ICoreBrowserService = unsafeCore._coreBrowserService;

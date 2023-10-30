@@ -192,7 +192,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     }
 
     const atlas = acquireTextureAtlas(
-      this._core,
+      this,
       this._optionsService.rawOptions,
       this._themeService.colors,
       this.dimensions.device.cell.width,
@@ -428,7 +428,9 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     // Calculate the device cell height, if lineHeight is _not_ 1, the resulting value will be
     // floored since lineHeight can never be lower then 1, this guarentees the device cell height
     // will always be larger than device char height.
-    this.dimensions.device.cell.height = Math.floor(this.dimensions.device.char.height * this._optionsService.rawOptions.lineHeight);
+    this.dimensions.device.cell.height = Math.floor(
+      this.dimensions.device.char.height *
+      this._optionsService.rawOptions.lineHeight);
 
     // Calculate the y offset within a cell that glyph should draw at in order for it to be centered
     // correctly within the cell.

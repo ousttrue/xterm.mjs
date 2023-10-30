@@ -1,9 +1,12 @@
 import * as THREE from "three";
 import { Terminal as TerminalCore } from "./src/browser/Terminal.mts";
-import { WebglExternalAddon } from "./addons/xterm-addon-webgl/src/WebglExternalAddon.mts";
+import { WebglExternalRenderer } from "./addons/xterm-addon-webgl/src/WebglExternalRenderer.mts";
 import { BufferNamespaceApi } from './src/common/public/BufferNamespaceApi.mts';
 import RectTarget from './recttarget.mts';
 import State from './state.mts'
+import { Disposable } from "./src/common/Lifecycle.mts";
+import { ICharSizeService } from "./src/browser/services/Services.mts";
+import { EventEmitter } from "./src/common/EventEmitter.mts";
 
 function wrapTexture(r: THREE.Renderer, texture: WebGLTexture): THREE.Texture {
   // https://stackoverflow.com/questions/29325906/can-you-use-raw-webgl-textures-with-three-js
@@ -113,6 +116,33 @@ class ThreejsScene {
   }
 }
 
+class FixedCharSizeService extends Disposable implements ICharSizeService {
+  public serviceBrand: undefined;
+  public width: number = 0;
+  public height: number = 0;
+  public get hasValidSize(): boolean { return this.width > 0 && this.height > 0; }
+  private readonly _onCharSizeChange = this.register(new EventEmitter<void>());
+  public readonly onCharSizeChange = this._onCharSizeChange.event;
+  constructor(
+  ) {
+    super();
+  }
+  setSize(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+    this.measure();
+  }
+  public measure(): void {
+    const result = { width: 9, height: 17 };
+    if (result.width !== this.width || result.height !== this.height) {
+      console.log(result);
+      this.width = result.width;
+      this.height = result.height;
+      this._onCharSizeChange.fire();
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async (event) => {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
@@ -138,8 +168,25 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   }
 
   const buffer = new BufferNamespaceApi(term);
-  const addon = new WebglExternalAddon(gl);
-  addon.activateCore(term, buffer, gl);
+
+  // term._core = term;
+  const charSizeService = new FixedCharSizeService();
+  charSizeService.setSize(24, 48);
+
+  const addon = new WebglExternalRenderer(
+    gl, term, buffer,
+    charSizeService,
+    // term._charSizeService,
+    term._coreBrowserService,
+    term.coreService,
+    term._decorationService,
+    term.optionsService,
+    term._themeService,
+  );
+  term._renderService.setRenderer(addon);
+
+  // const addon = new WebglExternalAddon(gl);
+  // addon.activateCore(term, buffer, gl);
   term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
 
   let lastTexture: THREE.Texture = null;
@@ -151,17 +198,17 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, w, h);
     if (texture == lastTexture) {
-      for (const { start, end } of addon._renderer.Invalidates) {
-        addon._renderer.render(start, end);
+      for (const { start, end } of addon.Invalidates) {
+        addon.render(start, end);
       }
     }
     else {
       // TODO: redraw
       console.log('new texture');
-      addon._renderer.render(0, term.rows);
+      addon.render(0, term.rows);
     }
     lastTexture = texture;
-    addon._renderer.Invalidates.length = 0;
+    addon.Invalidates.length = 0;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
