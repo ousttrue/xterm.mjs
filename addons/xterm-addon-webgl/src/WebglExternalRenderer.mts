@@ -245,7 +245,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   }
 
   public renderRows(start: number, end: number): void {
-    console.log(`${start} => ${end}`);
+    // console.log(`${start} => ${end}`);
     if (!this._isAttached) {
       if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
         this._updateDimensions();

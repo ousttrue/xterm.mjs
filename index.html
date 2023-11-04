@@ -1,7 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <link rel="stylesheet" href="css/xterm.css" />
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script type="module" src="./client/XRTTty.mts"></script>
+    <script type="module" src="./client/XRTTermBare.mts"></script>
+
     <style>
       html,
       body {
@@ -24,6 +28,20 @@
         bottom: 0px;
       }
     </style>
+    <script id="scene" type="text/html">
+      <a-scene>
+        <a-camera wasd-controls-enabled="false"></a-camera>
+        <a-box
+          term-bare
+          xrtty="cols: 80, rows: 24"
+          position="0 1.5 -1"
+          width="1"
+          height="0.6"
+          depth="0.01"
+          color="#4CC3D9"
+        ></a-box>
+      </a-scene>
+    </script>
     <script type="module" src="client/index.mts"></script>
   </head>
   <body>

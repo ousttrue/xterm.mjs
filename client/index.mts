@@ -4,6 +4,14 @@ import { WebglExternalAddon } from "../addons/xterm-addon-webgl/src/WebglExterna
 import ThreejsScene from "./ThreejsScene.mjs";
 
 
+document.addEventListener("DOMContentLoaded", (_) => {
+  console.log("DOMContentLoaded");
+
+
+  const src = document.getElementById('scene')!;
+  document.body.innerHTML = src.innerHTML;
+});
+
 function createGlContext(): [HTMLCanvasElement, WebGL2RenderingContext] {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
@@ -81,9 +89,10 @@ class MainLoop {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async (_event) => {
-  const loop = new MainLoop();
-  await loop.threejsScene.outer.Load();
-  loop.animate();
-});
+
+// document.addEventListener("DOMContentLoaded", async (_event) => {
+//   const loop = new MainLoop();
+//   await loop.threejsScene.outer.Load();
+//   loop.animate();
+// });
 
