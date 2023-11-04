@@ -22,7 +22,7 @@ export default class ThreejsScene {
     this.fbo = new Fbo(this._gl);
   }
 
-  beginFrame(): [WebGLFramebuffer, THREE.Texture, number, number] | null {
+  beginFrame(): [THREE.Texture, number, number] | null {
     const w = this.outer.Rect.width;
     const h = this.outer.Rect.height;
     if (w == 0 || h == 0) {
@@ -30,16 +30,22 @@ export default class ThreejsScene {
     }
 
     const [fbo, texture] = this.fbo.getOrCreate(w, h, this.state._renderer);
-    return [fbo, texture, w, h];
+
+    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, fbo);
+    this._gl.viewport(0, 0, w, h);
+
+    return [texture, w, h];
   }
 
   endFrame(texture: THREE.Texture) {
     this.state._renderer.resetState();
     if (texture) {
-      // console.log('endFrame', rt);
+      // console.log('endFrame');
       this.outer.Update(this.state.CursorScreen, texture);
       this.state._renderer.render(this.outer.Scene, this.outer.Camera);
       this.state._renderer.resetState();
+      this._gl.bindTexture(this._gl.TEXTURE_2D, null);
     }
+    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
   }
 }

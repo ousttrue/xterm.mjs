@@ -2,14 +2,11 @@ import * as THREE from "three";
 import { Terminal as TerminalCore } from "../src/browser/Terminal.mts";
 import { WebglExternalRenderer } from "../addons/xterm-addon-webgl/src/WebglExternalRenderer.mts";
 import { BufferNamespaceApi } from '../src/common/public/BufferNamespaceApi.mts';
-import { IRenderDimensions, IRenderer } from "../src/browser/renderer/shared/Types.mts";
-import { IRenderDebouncerWithCallback } from "../src/browser/Types.mts";
-import { IBufferService } from "../src/common/services/Services.mts";
 import FixedCharSizeService from "./FixedCharSizeService.mjs";
 import ThreejsScene from "./ThreejsScene.mjs";
 
 
-document.addEventListener("DOMContentLoaded", async (event) => {
+function createGlContext(): [HTMLCanvasElement, WebGL2RenderingContext] {
   const canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
   var w = canvas.clientWidth;
@@ -21,66 +18,69 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   });
   console.log(gl);
   console.log(canvas);
+  return [canvas, gl];
+}
 
-  const threejsScene = new ThreejsScene(canvas, gl);
-  await threejsScene.outer.Load();
 
-  const term = new TerminalCore();
-  if (term.open) {
+class MainLoop {
+  threejsScene: ThreejsScene;
+  lastTexture: THREE.Texture = null;
+  term: TerminalCore;
+  charSizeService: FixedCharSizeService;
+  addon: WebglExternalRenderer;
+
+  constructor() {
+    const [canvas, gl] = createGlContext();
+    this.threejsScene = new ThreejsScene(canvas, gl);
+
+    // setup term and addon
+    this.term = new TerminalCore();
     const el = document.getElementById("terminal");
     if (el) {
-      term.open(el);
+      this.term.open(el);
     }
+    const buffer = new BufferNamespaceApi(this.term);
+    this.charSizeService = new FixedCharSizeService();
+    this.charSizeService.setSize(9, 18);
+
+    this.addon = new WebglExternalRenderer(
+      gl, this.term, buffer,
+      this.charSizeService,
+      this.term._coreBrowserService,
+      this.term.coreService,
+      this.term._decorationService,
+      this.term.optionsService,
+      this.term._themeService,
+    );
+    const renderService = this.term._renderService;
+    renderService.setRenderer(this.addon);
+    this.term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
   }
 
-  const buffer = new BufferNamespaceApi(term);
+  animate() {
+    requestAnimationFrame(() => this.animate());
 
-  // term._core = term;
-  const charSizeService = new FixedCharSizeService();
-  charSizeService.setSize(9, 18);
-
-  const addon = new WebglExternalRenderer(
-    gl, term, buffer,
-    charSizeService,
-    term._coreBrowserService,
-    term.coreService,
-    term._decorationService,
-    term.optionsService,
-    term._themeService,
-  );
-  const renderService = term._renderService;
-  renderService.setRenderer(addon);
-
-  // const addon = new WebglExternalAddon(gl);
-  // addon.activateCore(term, buffer, gl);
-  term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
-
-  let lastTexture: THREE.Texture = null;
-  function animate() {
-    requestAnimationFrame(animate);
-
-    const [fbo, texture, w, h] = threejsScene.beginFrame();
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.viewport(0, 0, w, h);
-    if (texture != lastTexture) {
-      const cols = Math.floor(w / charSizeService.width);
-      const rows = Math.floor(h / charSizeService.height);
+    const [texture, w, h] = this.threejsScene.beginFrame();
+    if (texture != this.lastTexture) {
+      const cols = Math.floor(w / this.charSizeService.width);
+      const rows = Math.floor(h / this.charSizeService.height);
       console.log('colsxrows', cols, rows);
-      term.resize(cols, rows);
-      lastTexture = texture;
+      this.term.resize(cols, rows);
+      this.lastTexture = texture;
     }
-    for (const { start, end } of addon.Invalidates) {
-      addon.render(start, end);
+    for (const { start, end } of this.addon.Invalidates) {
+      this.addon.render(start, end);
     }
-    addon.Invalidates.length = 0;
+    this.addon.Invalidates.length = 0;
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    threejsScene.endFrame(texture);
-    gl.bindTexture(gl.TEXTURE_2D, null);
+    this.threejsScene.endFrame(texture);
   }
+}
 
-  animate();
+
+document.addEventListener("DOMContentLoaded", async (_event) => {
+  const loop = new MainLoop();
+  await loop.threejsScene.outer.Load();
+  loop.animate();
 });
 
