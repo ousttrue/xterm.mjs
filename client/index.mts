@@ -1,8 +1,6 @@
 import * as THREE from "three";
-import { Terminal as TerminalCore } from "../src/browser/Terminal.mts";
-import { WebglExternalRenderer } from "../addons/xterm-addon-webgl/src/WebglExternalRenderer.mts";
-import { BufferNamespaceApi } from '../src/common/public/BufferNamespaceApi.mts';
-import FixedCharSizeService from "./FixedCharSizeService.mjs";
+import { Terminal } from "../src/browser/public/Terminal.mts";
+import { WebglExternalAddon } from "../addons/xterm-addon-webgl/src/WebglExternalAddon.mjs";
 import ThreejsScene from "./ThreejsScene.mjs";
 
 
@@ -25,49 +23,49 @@ function createGlContext(): [HTMLCanvasElement, WebGL2RenderingContext] {
 class MainLoop {
   threejsScene: ThreejsScene;
   lastTexture: THREE.Texture = null;
-  term: TerminalCore;
-  charSizeService: FixedCharSizeService;
-  renderer: WebglExternalRenderer;
+  term: Terminal;
   gl: WebGL2RenderingContext;
+  addon: WebglExternalAddon;
 
   constructor() {
     const [canvas, gl] = createGlContext();
     this.threejsScene = new ThreejsScene(canvas, gl);
     this.gl = gl;
 
+    this.term = new Terminal({
+      // theme: theme,
+      allowTransparency: false,
+      cursorBlink: true,
+      disableStdin: false,
+      rows: 80,
+      cols: 24,
+      fontSize: 18
+    });
+
     // setup term and addon
-    this.term = new TerminalCore();
     const el = document.getElementById("terminal");
     if (el) {
       this.term.open(el);
     }
-    const buffer = new BufferNamespaceApi(this.term);
-    this.charSizeService = new FixedCharSizeService();
-    this.charSizeService.setSize(9, 17);
 
-    this.renderer = new WebglExternalRenderer(
-      gl, this.term, buffer,
-      this.charSizeService,
-      this.term._coreBrowserService,
-      this.term.coreService,
-      this.term._decorationService,
-      this.term.optionsService,
-      this.term._themeService,
-    );
-    const renderService = this.term._renderService;
-    renderService.setRenderer(this.renderer);
+    this.addon = new WebglExternalAddon(gl);
+    // @ts-ignore
+    this.term.loadAddon(this.addon);
+
     this.term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
   }
 
   animate() {
     requestAnimationFrame(() => this.animate());
 
+    const cell = this.addon._renderer!.dimensions.device.cell;
+
     const [texture, w, h] = this.threejsScene.beginFrame();
-    const cols = Math.floor(w / this.charSizeService.width);
-    const rows = Math.floor(h / this.charSizeService.height);
-    const ww = cols * this.charSizeService.width
-    const hh = rows * this.charSizeService.height;
-    this.gl.viewport(0, h-hh,
+    const cols = Math.floor(w / cell.width);
+    const rows = Math.floor(h / cell.height);
+    const ww = cols * cell.width
+    const hh = rows * cell.height;
+    this.gl.viewport(0, h - hh,
       ww,
       hh
     );
@@ -77,12 +75,11 @@ class MainLoop {
       this.lastTexture = texture;
     }
     // TODO: if buffer or atlas updated
-    this.renderer.render();
+    this.addon._renderer.render();
 
     this.threejsScene.endFrame(texture);
   }
 }
-
 
 document.addEventListener("DOMContentLoaded", async (_event) => {
   const loop = new MainLoop();
