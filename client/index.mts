@@ -27,11 +27,13 @@ class MainLoop {
   lastTexture: THREE.Texture = null;
   term: TerminalCore;
   charSizeService: FixedCharSizeService;
-  addon: WebglExternalRenderer;
+  renderer: WebglExternalRenderer;
+  gl: WebGL2RenderingContext;
 
   constructor() {
     const [canvas, gl] = createGlContext();
     this.threejsScene = new ThreejsScene(canvas, gl);
+    this.gl = gl;
 
     // setup term and addon
     this.term = new TerminalCore();
@@ -41,9 +43,9 @@ class MainLoop {
     }
     const buffer = new BufferNamespaceApi(this.term);
     this.charSizeService = new FixedCharSizeService();
-    this.charSizeService.setSize(9, 18);
+    this.charSizeService.setSize(9, 17);
 
-    this.addon = new WebglExternalRenderer(
+    this.renderer = new WebglExternalRenderer(
       gl, this.term, buffer,
       this.charSizeService,
       this.term._coreBrowserService,
@@ -53,7 +55,7 @@ class MainLoop {
       this.term._themeService,
     );
     const renderService = this.term._renderService;
-    renderService.setRenderer(this.addon);
+    renderService.setRenderer(this.renderer);
     this.term.write("Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ");
   }
 
@@ -61,17 +63,21 @@ class MainLoop {
     requestAnimationFrame(() => this.animate());
 
     const [texture, w, h] = this.threejsScene.beginFrame();
+    const cols = Math.floor(w / this.charSizeService.width);
+    const rows = Math.floor(h / this.charSizeService.height);
+    const ww = cols * this.charSizeService.width
+    const hh = rows * this.charSizeService.height;
+    this.gl.viewport(0, h-hh,
+      ww,
+      hh
+    );
     if (texture != this.lastTexture) {
-      const cols = Math.floor(w / this.charSizeService.width);
-      const rows = Math.floor(h / this.charSizeService.height);
-      console.log('colsxrows', cols, rows);
+      console.log(`${cols} x ${rows}: ${w}(${ww}), ${h}(${hh})`);
       this.term.resize(cols, rows);
       this.lastTexture = texture;
     }
-    for (const { start, end } of this.addon.Invalidates) {
-      this.addon.render(start, end);
-    }
-    this.addon.Invalidates.length = 0;
+    // TODO: if buffer or atlas updated
+    this.renderer.render();
 
     this.threejsScene.endFrame(texture);
   }

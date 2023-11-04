@@ -21,11 +21,11 @@ export default class FixedCharSizeService extends Disposable implements ICharSiz
     this.measure();
   }
   public measure(): void {
-    const result = { width: this._width, height: this._height };
-    if (result.width !== this.width || result.height !== this.height) {
+    if (this._width !== this.width || this._height !== this.height) {
+      this.width = this._width;
+      this.height = this._height;
+      const result = { width: this.width, height: this.height };
       console.log(result);
-      this.width = result.width;
-      this.height = result.height;
       this._onCharSizeChange.fire();
     }
   }

@@ -62,7 +62,6 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   public readonly onRequestRedraw = this._onRequestRedraw.event;
   private readonly _onContextLoss = this.register(new EventEmitter<void>());
   public readonly onContextLoss = this._onContextLoss.event;
-  public Invalidates: { start: number, end: number }[] = [];
 
   constructor(
     private _gl: IWebGL2RenderingContext,
@@ -247,22 +246,20 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
 
   public renderRows(start: number, end: number): void {
     console.log(`${start} => ${end}`);
-    this.Invalidates.push({ start, end });
-  }
-
-  public render(start: number, end: number): void {
     if (!this._isAttached) {
       if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
         this._updateDimensions();
         this._refreshCharAtlas();
         this._isAttached = true;
       } else {
+        console.log('return');
         return;
       }
     }
 
     // Update render layers
     if (!this._glyphRenderer.value || !this._rectangleRenderer.value) {
+      console.log('return');
       return;
     }
 
@@ -276,7 +273,9 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
       // just update changed lines to draw
       this._updateModel(start, end);
     }
+  }
 
+  public render(): void {
     // Render
     this._rectangleRenderer.value.renderBackgrounds();
     this._glyphRenderer.value.render(this._model);
@@ -462,6 +461,8 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
     // size on the canvas can differ.
     this.dimensions.css.cell.height = this.dimensions.device.cell.height / this._devicePixelRatio;
     this.dimensions.css.cell.width = this.dimensions.device.cell.width / this._devicePixelRatio;
+
+    console.log(this.dimensions);
   }
 
   private _requestRedrawViewport(): void {

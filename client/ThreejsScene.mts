@@ -23,22 +23,26 @@ export default class ThreejsScene {
   }
 
   beginFrame(): [THREE.Texture, number, number] | null {
-    const w = this.outer.Rect.width;
-    const h = this.outer.Rect.height;
+    let w = this.outer.Rect.width;
+    let h = this.outer.Rect.height;
     if (w == 0 || h == 0) {
       return;
     }
 
+    const dpr = window.devicePixelRatio;
+    w *= dpr;
+    h *= dpr;
+
     const [fbo, texture] = this.fbo.getOrCreate(w, h, this.state._renderer);
 
     this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, fbo);
-    this._gl.viewport(0, 0, w, h);
 
     return [texture, w, h];
   }
 
   endFrame(texture: THREE.Texture) {
     this.state._renderer.resetState();
+    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
     if (texture) {
       // console.log('endFrame');
       this.outer.Update(this.state.CursorScreen, texture);
@@ -46,6 +50,5 @@ export default class ThreejsScene {
       this.state._renderer.resetState();
       this._gl.bindTexture(this._gl.TEXTURE_2D, null);
     }
-    this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
   }
 }

@@ -221,10 +221,13 @@ export class GlyphRenderer extends Disposable {
     // should not instantiate any variables unless a new glyph is drawn to the cache where the
     // slight slowdown is acceptable for the developer ergonomics provided as it's a once of for
     // each glyph.
-    this._updateCell(this._vertices.attributes, x, y, code, bg, fg, ext, chars, lastBg);
+    this._updateCell(this._vertices.attributes, x, y,
+      code, bg, fg, ext, chars, lastBg);
   }
 
-  private _updateCell(array: Float32Array, x: number, y: number, code: number | undefined, bg: number, fg: number, ext: number, chars: string, lastBg: number): void {
+  private _updateCell(array: Float32Array, x: number, y: number,
+    code: number | undefined, bg: number, fg: number,
+    ext: number, chars: string, lastBg: number): void {
     $i = (y * this._terminal.cols + x) * INDICES_PER_CELL;
 
     // Exit early if this is a null character, allow space character to continue as it may have
@@ -311,21 +314,23 @@ export class GlyphRenderer extends Disposable {
   }
 
   public handleResize(): void {
-    const gl = this._gl;
-    gl.useProgram(this._program);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.uniform2f(this._resolutionLocation, gl.canvas.width, gl.canvas.height);
     this.clear();
   }
 
   public render(renderModel: IRenderModel): void {
     if (!this._atlas) {
+      console.log('no atlas');
       return;
     }
 
     const gl = this._gl;
 
     gl.useProgram(this._program);
+    const width = this._dimensions.device.canvas.width;
+    const height = this._dimensions.device.canvas.height;
+    // gl.viewport(0, 0, width, height);
+    gl.uniform2f(this._resolutionLocation, width, height);
+    // console.log(`${width} x ${height}`);
 
     // Alternate buffers each frame as the active buffer gets locked while it's in use by the GPU
     this._activeBuffer = (this._activeBuffer + 1) % 2;
@@ -348,7 +353,8 @@ export class GlyphRenderer extends Disposable {
 
     // Bind the attributes buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this._attributesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, activeBuffer.subarray(0, bufferLength), gl.STREAM_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER,
+      activeBuffer.subarray(0, bufferLength), gl.STREAM_DRAW);
 
     // Bind the atlas page texture if they have changed
     for (let i = 0; i < this._atlas.pages.length; i++) {
@@ -356,6 +362,7 @@ export class GlyphRenderer extends Disposable {
         this._bindAtlasPageTexture(gl, this._atlas, i);
       }
     }
+    gl.bindTexture(gl.TEXTURE_2D, this._atlasTextures[0].texture);
 
     // Draw the viewport
     this._vao.draw(bufferLength / INDICES_PER_CELL);
