@@ -6,6 +6,13 @@
     <script type="module" src="./client/XRTTty.mts"></script>
     <script type="module" src="./client/XRTTermBare.mts"></script>
 
+    <script type="module" src="./client/hand-tracking.js"></script>
+    <script type="module" src="./client/hand-visual.js"></script>
+    <script type="module" src="./client/boxes.mts"></script>
+    <script type="module" src="./client/bb-hittest.js"></script>
+    <script type="module" src="./client/bb-interaction.js"></script>
+    <script type="module" src="./client/pdetect.js"></script>
+
     <style>
       html,
       body {
@@ -29,15 +36,27 @@
       }
     </style>
     <script id="scene" type="text/html">
-      <a-scene>
+      <a-scene boxes>
         <a-camera wasd-controls-enabled="false"></a-camera>
+
+        <a-entity
+          hand-tracking="hand: left"
+          hand-visual="hand: left"
+        ></a-entity>
+        <a-entity
+          hand-tracking="hand: right"
+          hand-visual="hand: right"
+        ></a-entity>
+
         <a-box
+          bb-hittest
+          bb-interaction
           term-bare
           xrtty="cols: 80, rows: 24"
           position="0 1.5 -1"
           width="1"
           height="0.6"
-          depth="0.01"
+          depth="0.03"
           color="#4CC3D9"
         ></a-box>
       </a-scene>

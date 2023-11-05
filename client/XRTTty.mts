@@ -81,7 +81,7 @@ export default class XRTTty {
 
   tick() {
     this.addon._renderer!.renderRows(0, this.term._core.rows - 1);
-    this.term.focus();
+    // this.term.focus();
   }
 }
 

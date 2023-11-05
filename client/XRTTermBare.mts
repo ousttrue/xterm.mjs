@@ -118,7 +118,7 @@ AFRAME.registerComponent('term-bare', {
   schema: {
     width: { default: 1 },
     height: { default: 0.6 },
-    depth: { default: 0.05 },
+    depth: { default: 0.03 },
     color: { default: '#ffffff' },
     background: { default: '#000000' }
   },
