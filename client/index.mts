@@ -66,9 +66,9 @@ class MainLoop {
   animate() {
     requestAnimationFrame(() => this.animate());
 
-    const cell = this.addon._renderer!.dimensions.device.cell;
-
     const [texture, w, h] = this.threejsScene.beginFrame();
+
+    const cell = this.addon._renderer!.dimensions.device.cell;
     const cols = Math.floor(w / cell.width);
     const rows = Math.floor(h / cell.height);
     const ww = cols * cell.width

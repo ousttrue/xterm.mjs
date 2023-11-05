@@ -35,6 +35,10 @@ export default class XRTTermBare {
       // update fbo
       this.invalidated = true;
     });
+    // this.tty.term.focus();
+    // component.el.addEventListener('bb-enter', evt => {
+    //   this.tty.term.focus();
+    // })
 
     // ws to node-pty
     const protocol = (location.protocol == "https:") ? "wss" : "ws";
@@ -47,6 +51,8 @@ export default class XRTTermBare {
     };
     socket.onclose = () => {
       this.tty.term.write('\r\nConnection closed.\r\n');
+
+      this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     this.tty.term.onData((data: string) => {
       // console.log(`onData: ${data}`)
@@ -61,11 +67,11 @@ export default class XRTTermBare {
     // if (w == 0 || h == 0) {
     //   return;
     // }
-    //
-    // const dpr = window.devicePixelRatio;
-    // w *= dpr;
-    // h *= dpr;
-    //
+
+    const dpr = window.devicePixelRatio;
+    w *= dpr;
+    h *= dpr;
+
     this.previousFrameBuffer = this.gl.getParameter(this.gl.FRAMEBUFFER_BINDING);
 
     const [fbo, texture] = this.fbo.getOrCreate(w, h, this.threeRenderer);
@@ -95,12 +101,17 @@ export default class XRTTermBare {
       console.log('fbo');
       this.invalidated = false;
 
-      const f = 600
-      const widthMeter = component.el.getAttribute('width')
-      const heightMeter = component.el.getAttribute('height')
-      const width = widthMeter * f;
-      const height = heightMeter * f;
-      const [texture, w, h] = this.beginFrame(width, height)
+      const cell = this.tty.addon._renderer!.dimensions.device.cell;
+      const cols = this.tty.term.cols;
+      const rows = this.tty.term.rows;
+      const ww = cols * cell.width
+      const hh = rows * cell.height;
+      this.gl.viewport(0, 0,
+        ww,
+        hh
+      );
+      const [texture, w, h] = this.beginFrame(ww, hh)
+
       this.gl.viewport(0, 0, w, h);
       this.tty.addon._renderer.render();
       this.endFrame(texture);
@@ -116,9 +127,6 @@ console.log('AFRAME.registerComponent', 'term-bare');
 AFRAME.registerComponent('term-bare', {
   dependencies: ['xrtty'],
   schema: {
-    width: { default: 1 },
-    height: { default: 0.6 },
-    depth: { default: 0.03 },
     color: { default: '#ffffff' },
     background: { default: '#000000' }
   },

@@ -64,7 +64,7 @@ export default class XRTTty {
       disableStdin: false,
       rows: component.data.rows,
       cols: component.data.cols,
-      fontSize: 12
+      fontSize: 24
     });
     console.log(component.data);
 
@@ -78,11 +78,6 @@ export default class XRTTty {
     const message = 'Initialized\r\n';
     this.term.write(message);
   }
-
-  tick() {
-    this.addon._renderer!.renderRows(0, this.term._core.rows - 1);
-    // this.term.focus();
-  }
 }
 
 console.log('AFRAME.registerComponent', 'xrtty')
@@ -90,11 +85,11 @@ AFRAME.registerComponent('xrtty', {
   schema: Object.assign({
     cols: {
       type: 'number',
-      default: 80
+      default: 40
     },
     rows: {
       type: 'number',
-      default: 24
+      default: 20
     },
   }, TERMINAL_THEME),
   init: function() {
@@ -116,8 +111,4 @@ AFRAME.registerComponent('xrtty', {
       console.log('cleared');
     });
   },
-  tick: function() {
-    // @ts-ignore
-    this.impl.tick();
-  }
 });
