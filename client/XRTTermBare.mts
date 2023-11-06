@@ -32,11 +32,11 @@ export default class XRTTermBare {
     // Listen on data, write it to the terminal
     socket.onmessage = ({ data }) => {
       this.tty.term.write(data);
-      this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
+      // this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     socket.onclose = () => {
       this.tty.term.write('\r\nConnection closed.\r\n');
-      this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
+      // this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     this.tty.term.onData((data: string) => {
       console.log(data)
