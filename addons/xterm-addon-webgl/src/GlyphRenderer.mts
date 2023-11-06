@@ -204,10 +204,6 @@ export class GlyphRenderer extends Disposable {
       this._atlasTextures[i] = glTexture;
     }
 
-    // Allow drawing of transparent texture
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
     // Set viewport
     this.handleResize();
   }
@@ -361,8 +357,14 @@ export class GlyphRenderer extends Disposable {
       if (this._atlas.pages[i].version !== this._atlasTextures[i].version) {
         this._bindAtlasPageTexture(gl, this._atlas, i);
       }
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, this._atlasTextures[i].texture);
     }
-    gl.bindTexture(gl.TEXTURE_2D, this._atlasTextures[0].texture);
+
+    // Allow drawing of transparent texture
+    gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE);
 
     // Draw the viewport
     this._vao.draw(bufferLength / INDICES_PER_CELL);
