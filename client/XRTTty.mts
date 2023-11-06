@@ -7,7 +7,6 @@ import { WebglExternalAddon } from '../addons/xterm-addon-webgl/src/WebglExterna
  * MIT license
  */
 
-import CM from '../Common.mjs';
 const TERMINAL_THEME = {
   theme_foreground: { 'default': '#ffffff' },
   theme_background: { 'default': '#000000' },

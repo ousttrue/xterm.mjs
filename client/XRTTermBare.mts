@@ -1,12 +1,12 @@
 /// @ts-check
 import CM from '../Common.mjs'
+import XRTTty from './XRTTty.mts';
 import Fbo from './fbo.mjs';
 
 export default class XRTTermBare {
   threeRenderer: THREE.Renderer;
   fbo: Fbo;
   gl: WebGL2RenderingContext;
-  invalidated = false;
   tty: XRTTty;
   previousFrameBuffer: any;
   material: any;
@@ -17,12 +17,6 @@ export default class XRTTermBare {
     this.material = new THREE.MeshBasicMaterial({});
     this.material.needsUpdate = true;
     component.el.object3D.children[0].material = this.material;
-    // const model = component.el.getObject3D('mesh');
-    // model.traverse((node) => {
-    //   if (node.isMesh) {
-    //     node.frustumCulled = false;
-    //   }
-    // });
 
     // @ts-ignore
     this.gl = this.threeRenderer.getContext();
@@ -30,15 +24,6 @@ export default class XRTTermBare {
 
     // @ts-ignore
     this.tty = (component.el.components['xrtty'].impl) as XRTTty;
-    // const addon = tty.addon;
-    this.tty.term.onRender(() => {
-      // update fbo
-      this.invalidated = true;
-    });
-    // this.tty.term.focus();
-    // component.el.addEventListener('bb-enter', evt => {
-    //   this.tty.term.focus();
-    // })
 
     // ws to node-pty
     const protocol = (location.protocol == "https:") ? "wss" : "ws";
@@ -46,27 +31,20 @@ export default class XRTTermBare {
     const socket = new WebSocket(`${url}:${CM.COMM_PORT}/`);
     // Listen on data, write it to the terminal
     socket.onmessage = ({ data }) => {
-      // console.log(data);
       this.tty.term.write(data);
+      this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     socket.onclose = () => {
       this.tty.term.write('\r\nConnection closed.\r\n');
-
       this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     this.tty.term.onData((data: string) => {
-      // console.log(`onData: ${data}`)
       socket.send(data);
     });
   }
 
   beginFrame(w: number, h: number): [THREE.Texture, number, number] | null {
     this.threeRenderer.resetState();
-    // let w = this.outer.Rect.width;
-    // let h = this.outer.Rect.height;
-    // if (w == 0 || h == 0) {
-    //   return;
-    // }
 
     const dpr = window.devicePixelRatio;
     w *= dpr;
@@ -84,22 +62,12 @@ export default class XRTTermBare {
   endFrame(texture: THREE.Texture) {
     this.threeRenderer.resetState();
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.previousFrameBuffer);
-    // if (texture) {
-    //   // console.log('endFrame');
-    //   this.outer.Update(this.state.CursorScreen, texture);
-    //   this.state._renderer.render(this.outer.Scene, this.outer.Camera);
-    //   this.state._renderer.resetState();
-    // this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-    // }
   }
 
   tick(component: typeof AFRAME.AComponent) {
-    // this.tty.term.write(`${this.count++}\n`);
-    // this.termObject._aframebuffergeometry.attributes.position.needsUpdate = true;
-    // this.termObject._aframebuffergeometry.attributes.uv.needsUpdate = true;
-    if (this.invalidated) {
+    if (this.tty.addon._renderer._invalidated) {
       console.log('fbo');
-      this.invalidated = false;
+      this.tty.addon._renderer._invalidated = false;
 
       const cell = this.tty.addon._renderer!.dimensions.device.cell;
       const cols = this.tty.term.cols;

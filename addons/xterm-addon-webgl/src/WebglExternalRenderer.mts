@@ -62,6 +62,7 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   public readonly onRequestRedraw = this._onRequestRedraw.event;
   private readonly _onContextLoss = this.register(new EventEmitter<void>());
   public readonly onContextLoss = this._onContextLoss.event;
+  _invalidated: boolean = false;
 
   constructor(
     private _gl: IWebGL2RenderingContext,
@@ -245,6 +246,8 @@ export class WebglExternalRenderer extends Disposable implements IRenderer {
   }
 
   public renderRows(start: number, end: number): void {
+    this._invalidated = true;
+
     // console.log(`${start} => ${end}`);
     if (!this._isAttached) {
       if (this._coreBrowserService.window.document.body.contains(this._core.screenElement!) && this._charSizeService.width && this._charSizeService.height) {
