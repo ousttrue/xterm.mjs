@@ -77,6 +77,13 @@ export default class XRTTty {
     const message = 'Initialized\r\n';
     this.term.write(message);
   }
+
+  tick() {
+    if (document.activeElement != document.body) {
+      console.log('fix activeElement');
+      document.activeElement.blur();
+    }
+  }
 }
 
 console.log('AFRAME.registerComponent', 'xrtty')
@@ -110,4 +117,7 @@ AFRAME.registerComponent('xrtty', {
       console.log('cleared');
     });
   },
+  tick() {
+    this.impl.tick();
+  }
 });

@@ -59,7 +59,6 @@ import { WindowsOptionsReportType } from '../common/InputHandler.mjs';
 import { AccessibilityManager } from './AccessibilityManager.mjs';
 
 export class Terminal extends CoreTerminal implements ITerminal {
-  public textarea: HTMLTextAreaElement | undefined;
   public element: HTMLElement | undefined;
   public screenElement: HTMLElement | undefined;
 
@@ -242,9 +241,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
    * Focus the terminal. Delegates focus handling to the terminal's DOM element.
    */
   public focus(): void {
-    if (this.textarea) {
-      this.textarea.focus({ preventScroll: true });
-    }
   }
 
   private _handleScreenReaderModeOptionChange(value: boolean): void {
@@ -261,13 +257,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
    * Binds the desired focus behavior on a given terminal object.
    */
   private _handleTextAreaFocus(ev: KeyboardEvent): void {
-    if (this.coreService.decPrivateModes.sendFocus) {
-      this.coreService.triggerDataEvent(C0.ESC + '[I');
-    }
-    this.updateCursorStyle(ev);
-    this.element!.classList.add('focus');
-    this._showCursor();
-    this._onFocus.fire();
   }
 
   /**
@@ -275,48 +264,12 @@ export class Terminal extends CoreTerminal implements ITerminal {
    * textarea.
    */
   public blur(): void {
-    return this.textarea?.blur();
   }
 
   /**
    * Binds the desired blur behavior on a given terminal object.
    */
   private _handleTextAreaBlur(): void {
-    // Text can safely be removed on blur. Doing it earlier could interfere with
-    // screen readers reading it out.
-    this.textarea!.value = '';
-    this.refresh(this.buffer.y, this.buffer.y);
-    if (this.coreService.decPrivateModes.sendFocus) {
-      this.coreService.triggerDataEvent(C0.ESC + '[O');
-    }
-    this.element!.classList.remove('focus');
-    this._onBlur.fire();
-  }
-
-  private _syncTextArea(): void {
-    if (!this.textarea || !this.buffer.isCursorInViewport || this._compositionHelper!.isComposing || !this._renderService) {
-      return;
-    }
-    const cursorY = this.buffer.ybase + this.buffer.y;
-    const bufferLine = this.buffer.lines.get(cursorY);
-    if (!bufferLine) {
-      return;
-    }
-    const cursorX = Math.min(this.buffer.x, this.cols - 1);
-    const cellHeight = this._renderService.dimensions.css.cell.height;
-    const width = bufferLine.getWidth(cursorX);
-    const cellWidth = this._renderService.dimensions.css.cell.width * width;
-    const cursorTop = this.buffer.y * this._renderService.dimensions.css.cell.height;
-    const cursorLeft = cursorX * this._renderService.dimensions.css.cell.width;
-
-    // Sync the textarea to the exact position of the composition view so the IME knows where the
-    // text is.
-    this.textarea.style.left = cursorLeft + 'px';
-    this.textarea.style.top = cursorTop + 'px';
-    this.textarea.style.width = cellWidth + 'px';
-    this.textarea.style.height = cellHeight + 'px';
-    this.textarea.style.lineHeight = cellHeight + 'px';
-    this.textarea.style.zIndex = '-5';
   }
 
   /**
@@ -334,49 +287,19 @@ export class Terminal extends CoreTerminal implements ITerminal {
       }
       copyHandler(event, this._selectionService!);
     }));
-    const pasteHandlerWrapper = (event: ClipboardEvent): void => handlePasteEvent(event, this.textarea!, this.coreService, this.optionsService);
-    this.register(addDisposableDomListener(this.textarea!, 'paste', pasteHandlerWrapper));
-    this.register(addDisposableDomListener(this.element!, 'paste', pasteHandlerWrapper));
-
-    // Handle right click context menus
-    if (Browser.isFirefox) {
-      // Firefox doesn't appear to fire the contextmenu event on right click
-      this.register(addDisposableDomListener(this.element!, 'mousedown', (event: MouseEvent) => {
-        if (event.button === 2) {
-          rightClickHandler(event, this.textarea!, this.screenElement!, this._selectionService!, this.options.rightClickSelectsWord);
-        }
-      }));
-    } else {
-      this.register(addDisposableDomListener(this.element!, 'contextmenu', (event: MouseEvent) => {
-        rightClickHandler(event, this.textarea!, this.screenElement!, this._selectionService!, this.options.rightClickSelectsWord);
-      }));
-    }
-
-    // Move the textarea under the cursor when middle clicking on Linux to ensure
-    // middle click to paste selection works. This only appears to work in Chrome
-    // at the time is writing.
-    if (Browser.isLinux) {
-      // Use auxclick event over mousedown the latter doesn't seem to work. Note
-      // that the regular click event doesn't fire for the middle mouse button.
-      this.register(addDisposableDomListener(this.element!, 'auxclick', (event: MouseEvent) => {
-        if (event.button === 1) {
-          moveTextAreaUnderMouseCursor(event, this.textarea!, this.screenElement!);
-        }
-      }));
-    }
   }
 
   /**
    * Apply key handling to the terminal
    */
   private _bindKeys(): void {
-    this.register(addDisposableDomListener(this.textarea!, 'keyup', (ev: KeyboardEvent) => this._keyUp(ev), true));
-    this.register(addDisposableDomListener(this.textarea!, 'keydown', (ev: KeyboardEvent) => this._keyDown(ev), true));
-    this.register(addDisposableDomListener(this.textarea!, 'keypress', (ev: KeyboardEvent) => this._keyPress(ev), true));
-    this.register(addDisposableDomListener(this.textarea!, 'compositionstart', () => this._compositionHelper!.compositionstart()));
-    this.register(addDisposableDomListener(this.textarea!, 'compositionupdate', (e: CompositionEvent) => this._compositionHelper!.compositionupdate(e)));
-    this.register(addDisposableDomListener(this.textarea!, 'compositionend', () => this._compositionHelper!.compositionend()));
-    this.register(addDisposableDomListener(this.textarea!, 'input', (ev: InputEvent) => this._inputEvent(ev), true));
+    this.register(addDisposableDomListener(document.body!, 'keyup', (ev: KeyboardEvent) => this._keyUp(ev), true));
+    this.register(addDisposableDomListener(document.body!, 'keydown', (ev: KeyboardEvent) => this._keyDown(ev), true));
+    this.register(addDisposableDomListener(document.body!, 'keypress', (ev: KeyboardEvent) => this._keyPress(ev), true));
+    this.register(addDisposableDomListener(document.body!, 'compositionstart', () => this._compositionHelper!.compositionstart()));
+    this.register(addDisposableDomListener(document.body!, 'compositionupdate', (e: CompositionEvent) => this._compositionHelper!.compositionupdate(e)));
+    this.register(addDisposableDomListener(document.body!, 'compositionend', () => this._compositionHelper!.compositionend()));
+    this.register(addDisposableDomListener(document.body!, 'input', (ev: InputEvent) => this._inputEvent(ev), true));
     this.register(this.onRender(() => this._compositionHelper!.updateCompositionElements()));
   }
 
@@ -435,33 +358,15 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this.screenElement.appendChild(this._helperContainer);
     fragment.appendChild(this.screenElement);
 
-    this.textarea = this._document.createElement('textarea');
-    this.textarea.classList.add('xterm-helper-textarea');
-    this.textarea.setAttribute('aria-label', Strings.promptLabel);
-    if (!Browser.isChromeOS) {
-      // ChromeVox on ChromeOS does not like this. See
-      // https://issuetracker.google.com/issues/260170397
-      this.textarea.setAttribute('aria-multiline', 'false');
-    }
-    this.textarea.setAttribute('autocorrect', 'off');
-    this.textarea.setAttribute('autocapitalize', 'off');
-    this.textarea.setAttribute('spellcheck', 'false');
-    this.textarea.tabIndex = 0;
-
     // Register the core browser service before the generic textarea handlers are registered so it
     // handles them first. Otherwise the renderers may use the wrong focus state.
     this._coreBrowserService = this.register(this._instantiationService.createInstance(CoreBrowserService,
-      this.textarea,
+      document.body,
       parent.ownerDocument.defaultView ?? window,
       // Force unsafe null in node.js environment for tests
       this._document ?? (typeof window !== 'undefined') ? window.document : null as any
     ));
     this._instantiationService.setService(ICoreBrowserService, this._coreBrowserService);
-
-    this.register(addDisposableDomListener(this.textarea, 'focus', (ev: KeyboardEvent) => this._handleTextAreaFocus(ev)));
-    this.register(addDisposableDomListener(this.textarea, 'blur', () => this._handleTextAreaBlur()));
-    this._helperContainer.appendChild(this.textarea);
-
 
     this._charSizeService = this._instantiationService.createInstance(CharSizeService, this._document, this._helperContainer);
     this._instantiationService.setService(ICharSizeService, this._charSizeService);
@@ -479,7 +384,7 @@ export class Terminal extends CoreTerminal implements ITerminal {
 
     this._compositionView = this._document.createElement('div');
     this._compositionView.classList.add('composition-view');
-    this._compositionHelper = this._instantiationService.createInstance(CompositionHelper, this.textarea, this._compositionView);
+    this._compositionHelper = this._instantiationService.createInstance(CompositionHelper, document.body, this._compositionView);
     this._helperContainer.appendChild(this._compositionView);
 
     // Performance: Add viewport and helper elements from the fragment
@@ -503,7 +408,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
 
     this.register(this.onCursorMove(() => {
       this._renderService!.handleCursorMove();
-      this._syncTextArea();
     }));
     this.register(this.onResize(() => this._renderService!.handleResize(this.cols, this.rows)));
     this.register(this.onBlur(() => this._renderService!.handleBlur()));
@@ -519,14 +423,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
     this.register(this._selectionService.onRequestScrollLines(e => this.scrollLines(e.amount, e.suppressScrollEvent)));
     this.register(this._selectionService.onSelectionChange(() => this._onSelectionChange.fire()));
     this.register(this._selectionService.onRequestRedraw(e => this._renderService!.handleSelectionChanged(e.start, e.end, e.columnSelectMode)));
-    this.register(this._selectionService.onLinuxMouseSelection(text => {
-      // If there's a new selection, put it into the textarea, focus and select it
-      // in order to register it as a selection on the OS. This event is fired
-      // only on Linux to enable middle click to paste selection.
-      this.textarea!.value = text;
-      this.textarea!.focus();
-      this.textarea!.select();
-    }));
     this.register(this._onScroll.event(ev => {
       this.viewport!.syncScrollArea();
       this._selectionService!.refresh();
@@ -875,7 +771,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
   }
 
   public paste(data: string): void {
-    paste(data, this.textarea!, this.coreService, this.optionsService);
   }
 
   /**
@@ -1056,7 +951,6 @@ export class Terminal extends CoreTerminal implements ITerminal {
     // will announce deleted characters. This will not work 100% of the time but it should cover
     // most scenarios.
     if (result.key === C0.ETX || result.key === C0.CR) {
-      this.textarea!.value = '';
     }
 
     this._onKey.fire({ key: result.key, domEvent: event });

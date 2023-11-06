@@ -39,6 +39,7 @@ export default class XRTTermBare {
       this.tty.addon._renderer!.renderRows(0, this.tty.term._core.rows - 1);
     };
     this.tty.term.onData((data: string) => {
+      console.log(data)
       socket.send(data);
     });
   }
